@@ -11,6 +11,25 @@
       <div class="nav-btn">
         <a class="q-pr-sm" clickable @click="goTo('/help')"> Help </a>
       </div>
+
+      <br />
+      <div class="nav-btn">
+        <a
+          target="_blank"
+          class="href-link attribution"
+          href="https://icons8.com/icon/5558/hospital-3"
+        >
+          Hospital Map Marker
+        </a>
+        <span class="q-px-sm">Icon by </span>
+        <a
+          target="_blank"
+          class="href-link attribution"
+          href="https://icons8.com"
+        >
+          Icons8
+        </a>
+      </div>
     </div>
 
     <div class="copyright q-pt-lg">
@@ -71,9 +90,7 @@ export default defineComponent({
 
   methods: {
     goHome() {
-      this.$router.push("/").then(() => {
-        this.$router.go();
-      });
+      this.$router.push("/");
     },
 
     goTo(route) {
@@ -94,6 +111,10 @@ export default defineComponent({
   text-decoration: none;
   cursor: pointer;
 }
+.attribution {
+  color: #ffffff;
+  text-decoration: underline;
+}
 .nav-btn {
   padding: 6px;
   padding-left: 0;
@@ -108,7 +129,7 @@ export default defineComponent({
 .quick-links,
 .copyright {
   width: 100%;
-  max-width: 1024px;
+  max-width: 1200px;
   padding: 16px;
   margin: 0 auto;
 }
