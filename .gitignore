@@ -44,4 +44,4 @@ Thumbs.db
 .env
 
 # Secrets File
-# src/secrets.config.js
+src/secrets.config.js
