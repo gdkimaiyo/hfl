@@ -24,7 +24,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 .main-page {
   width: 100%;
-  max-width: 1024px;
+  max-width: 1200px;
   margin: 0 auto;
   margin-top: 32px;
 }

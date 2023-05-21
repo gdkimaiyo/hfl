@@ -111,9 +111,7 @@ export default defineComponent({
 
   methods: {
     goHome() {
-      this.$router.push("/").then(() => {
-        this.$router.go();
-      });
+      this.$router.push("/");
     },
 
     goTo(route) {
@@ -132,7 +130,7 @@ export default defineComponent({
 }
 .toolbar {
   width: 100%;
-  max-width: 1024px;
+  max-width: 1200px;
   margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
