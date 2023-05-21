@@ -21,9 +21,27 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Visual Studio Code
 # Editor directories and files
 .idea
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+*.code-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+*.pem
+.env
+
+# Secrets File
+src/secrets.config.js
