@@ -2,6 +2,14 @@
   <q-page class="column q-pb-xl">
     <div class="main-page q-pa-md q-mt-sm">
       <div class="text-h5 page-header">Health Facility Locator</div>
+      <div class="info">
+        <q-icon
+          name="fas fa-circle-info"
+          size="16px"
+          style="padding-right: 4px"
+        />
+        Click on facility name or the map marker to zoom in on the map
+      </div>
       <q-separator spaced />
       <div class="section">
         <div class="side-content">
@@ -17,6 +25,7 @@
               :class="{
                 active: selectedFaciliity === facility.properties.id,
               }"
+              @click="showFacility(facility.properties.id)"
             >
               <a
                 href="#"
@@ -25,7 +34,6 @@
                 :class="{
                   active: selectedFaciliity === facility.properties.id,
                 }"
-                @click="showFacility(facility.properties.id)"
               >
                 {{ facility.properties.name }}
               </a>
@@ -35,21 +43,39 @@
                   name="fas fa-circle"
                   size="3px"
                   style="padding: 0 8px"
-                  v-if="facility.properties.phone"
                 />
+                <span v-if="facility.properties.isPrivate" class="muted">
+                  Private
+                </span>
+                <span v-else class="muted">Public</span>
+              </div>
+              <div class="">
                 <span v-if="facility.properties.phone">
+                  <q-icon
+                    name="fas fa-phone"
+                    class="muted"
+                    size="12px"
+                    style="padding-right: 2px"
+                  />
                   {{ facility.properties.phone }}
                 </span>
                 <q-icon
                   name="fas fa-circle"
-                  color="white"
                   size="3px"
                   style="padding: 0 8px"
-                  v-if="facility.properties.distance"
+                  v-if="facility.properties.phone && facility.properties.email"
                 />
-                <span v-if="facility.properties.distance">
-                  <strong>{{ facility.properties.distance }} miles away</strong>
-                </span>
+                <a
+                  :href="`mailto:${facility.properties.email}`"
+                  class="email"
+                  v-if="facility.properties.email"
+                  @click.stop
+                >
+                  {{ facility.properties.email }}
+                </a>
+              </div>
+              <div class="" v-if="facility.properties.distance">
+                <strong>{{ facility.properties.distance }} miles away</strong>
               </div>
             </div>
           </div>
@@ -223,6 +249,10 @@ export default defineComponent({
 .page-header {
   margin: 0 0 24px 12px;
 }
+.info {
+  color: #6c757d;
+  margin-left: 12px;
+}
 
 .section {
   display: flex;
@@ -278,6 +308,7 @@ a:hover {
   border-bottom: 1px solid #eee;
   padding: 10px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .listings .item:last-child {
@@ -315,7 +346,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00853e;
+  background: #0d1441;
   border-radius: 0;
 }
 
@@ -330,8 +361,21 @@ a:hover {
   }
 }
 
+.muted {
+  color: #6c757d;
+}
+
+.email {
+  color: #2233a1;
+  text-decoration: none;
+}
+.email:hover {
+  color: #2233a1;
+}
+
 @media only screen and (max-width: 600px) {
-  .page-header {
+  .page-header,
+  .info {
     margin: 0;
   }
   .section {
