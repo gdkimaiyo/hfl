@@ -1,0 +1,10 @@
+{
+  "extends": "./.quasar/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "skipLibCheck": true /* Prevents TS from panicking over external library typing mismatches */,
+    "allowSyntheticDefaultImports": true
+  }
+}

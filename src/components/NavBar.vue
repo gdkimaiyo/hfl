@@ -56,10 +56,7 @@
                 clickable
                 v-ripple
               >
-                <q-item-section
-                  style="display: inline-block"
-                  @click="goTo('/about-us')"
-                >
+                <q-item-section style="display: inline-block" @click="goTo('/about-us')">
                   <q-icon name="fas fa-square-info" class="q-pr-sm" />
                   About
                 </q-item-section>
@@ -72,10 +69,7 @@
                 clickable
                 v-ripple
               >
-                <q-item-section
-                  style="display: inline-block"
-                  @click="goTo('/help')"
-                >
+                <q-item-section style="display: inline-block" @click="goTo('/help')">
                   <q-icon name="fas fa-square-question" class="q-pr-sm" />
                   Help
                 </q-item-section>
@@ -90,40 +84,46 @@
   </q-header>
 </template>
 
-<script>
-import { defineComponent, ref } from "vue";
-import { useRoute } from "vue-router";
+<script lang="ts">
+import { defineComponent, ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default defineComponent({
-  name: "NavBar",
+  name: 'NavBar',
 
   setup() {
-    return {
-      dropDownMenu: ref(false),
+    const router = useRouter();
+    const route = useRoute();
+
+    const dropDownMenu = ref<boolean>(false);
+
+    // Computed
+    const currentRoute = computed<string>(() => {
+      return route.path;
+    });
+
+    // Methods
+    const goHome = async () => {
+      await router.push('/');
     };
-  },
 
-  computed: {
-    currentRoute() {
-      return useRoute().path;
-    },
-  },
+    const goTo = async (targetRoute: string) => {
+      await router.push(targetRoute);
+    };
 
-  methods: {
-    goHome() {
-      this.$router.push("/");
-    },
-
-    goTo(route) {
-      this.$router.push(route);
-    },
+    return {
+      dropDownMenu,
+      currentRoute,
+      goHome,
+      goTo,
+    };
   },
 });
 </script>
 
 <style lang="scss" scoped>
 #navbar {
-  font-family: "Avenir";
+  font-family: 'Avenir';
   background-color: rgba(255, 255, 255);
   backdrop-filter: blur(40px);
   border-bottom: 0.5px solid #0d1441;
