@@ -22,13 +22,7 @@
           Hospital Map Marker
         </a>
         <span class="q-px-sm">Icon by </span>
-        <a
-          target="_blank"
-          class="href-link attribution"
-          href="https://icons8.com"
-        >
-          Icons8
-        </a>
+        <a target="_blank" class="href-link attribution" href="https://icons8.com"> Icons8 </a>
       </div>
     </div>
 
@@ -37,12 +31,7 @@
       <div class="q-mt-md">
         &copy;
         {{ year }}
-        <q-icon
-          name="fas fa-circle"
-          color="white"
-          size="5px"
-          style="padding: 0 6px"
-        />
+        <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
         <a class="href-link" clickable @click="goHome()" style="color: #ffffff">
           <span>
             <q-icon name="fas fa-location-dot" />
@@ -55,47 +44,43 @@
             <q-icon name="fas fa-l" size="12px" />
           </span>
         </a>
-        <q-icon
-          name="fas fa-circle"
-          color="white"
-          size="5px"
-          style="padding: 0 6px"
-        />
+        <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
         <a class="href-link" clickable @click="goHome()" style="color: #ffffff">
           Health Facility Locator
         </a>
-        <q-icon
-          name="fas fa-circle"
-          color="white"
-          size="5px"
-          style="padding: 0 6px"
-        />
+        <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
         All Rights Reserved
       </div>
     </div>
   </footer>
 </template>
 
-<script>
-import { defineComponent, ref } from "vue";
+<script lang="ts">
+import { defineComponent, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
-  name: "FooterBar",
+  name: 'FooterBar',
 
   setup() {
-    return {
-      year: ref(new Date().getFullYear()),
+    const router = useRouter();
+    const year = ref<number>(new Date().getFullYear());
+
+    // Methods
+    const goHome = async () => {
+      await router.push('/');
     };
-  },
 
-  methods: {
-    goHome() {
-      this.$router.push("/");
-    },
+    const goTo = async (route: string) => {
+      await router.push(route);
+    };
 
-    goTo(route) {
-      this.$router.push(route);
-    },
+    return {
+      year,
+
+      goHome,
+      goTo,
+    };
   },
 });
 </script>

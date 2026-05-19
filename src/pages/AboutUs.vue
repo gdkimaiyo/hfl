@@ -4,20 +4,19 @@
       <div class="text-h5">About Us</div>
       <q-separator spaced />
       <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus
-        consectetur modi sequi perferendis consequuntur esse voluptatibus
-        pariatur alias dolorem? Vel perspiciatis commodi, earum sed ad nam
-        fugiat ullam similique quidem!
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus consectetur modi sequi
+        perferendis consequuntur esse voluptatibus pariatur alias dolorem? Vel perspiciatis commodi,
+        earum sed ad nam fugiat ullam similique quidem!
       </p>
     </div>
   </q-page>
 </template>
 
-<script>
-import { defineComponent } from "vue";
+<script lang="ts">
+import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: "AboutUs",
+  name: 'AboutUs',
 });
 </script>
 

@@ -1,0 +1,503 @@
+[
+  {
+    "name": "Kenyatta National Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.80700922760637, -1.301141731273861]
+    },
+    "properties": {
+      "phone": "020-2726300",
+      "email": "knhadmin@knh.or.ke",
+      "name": "Kenyatta National Hospital",
+      "address": "Hospital Road",
+      "mailingAddress": "P.O Box 20723 - 00202, Nairobi",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "postalCode": "00202",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 6,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Mbagathi County Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.80342399557637, -1.308925446606103]
+    },
+    "properties": {
+      "phone": "020-2724712",
+      "name": "Mbagathi County Hospital",
+      "address": "Off Mbagathi Road",
+      "mailingAddress": "P.O. Box 40205, Nairobi",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Kenya Defense Forces Memorial Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.80482, -1.3104]
+    },
+    "properties": {
+      "phone": "020-2731634",
+      "email": "publicaffairs@mod.go.ke",
+      "name": "Kenya Defense Forces Memorial Hospital",
+      "address": "Nyayo Highrise Mbagathi Way",
+      "mailingAddress": "P O Box 40668 – 00100, Nairobi",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "postalCode": "00100",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Mama Lucy Kibaki Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.898979866740454, -1.273794475031693]
+    },
+    "properties": {
+      "phone": "020-8022676",
+      "email": "info@mamalucykibakihospital.or.ke",
+      "name": "Mama Lucy Kibaki Hospital",
+      "address": "Kangundo Road Umoja II",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Pumwani Maternity Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.84546656674033, -1.280471127894011]
+    },
+    "properties": {
+      "phone": "0778564272",
+      "name": "Pumwani Maternity Hospital",
+      "address": "Pumwani, Nairobi",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Mathari National & Teaching Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.84655459557629, -1.260549542755912]
+    },
+    "properties": {
+      "phone": "020-2391431",
+      "email": "matharirefferal@gmail.com",
+      "name": "Mathari National & Teaching Hospital",
+      "address": "Thika Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 6,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "National Spinal Injury Referral Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.79410570828493, -1.2880442556649923]
+    },
+    "properties": {
+      "phone": "020-2726336",
+      "name": "National Spinal Injury Referral Hospital",
+      "address": "Rose Ave, Kilimani",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 6,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "The Nairobi Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.80462576938572, -1.2965269902104213]
+    },
+    "properties": {
+      "phone": "020-2845000",
+      "email": "hosp@nbihosp.org",
+      "name": "The Nairobi Hospital",
+      "address": "Argwings Kodhek Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 6,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Nairobi Women's Hospital - Hurlingham",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.79607519538338, -1.2937005464919717]
+    },
+    "properties": {
+      "phone": "+254709667000",
+      "email": "info@nwch.co.ke",
+      "name": "Nairobi Women's Hospital - Hurlingham",
+      "address": "Argwings Kodhek Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "The Nairobi West Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.825884492577664, -1.3066884481056296]
+    },
+    "properties": {
+      "phone": "+254730600000",
+      "email": "enquiry@nairobiwesthospital.com",
+      "name": "The Nairobi West Hospital",
+      "address": "Gandhi Ave, Nairobi West",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Gertrude’s Children’s Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.83171331841077, -1.2557353381754701]
+    },
+    "properties": {
+      "phone": "+2540709529000",
+      "email": "info@gerties.org",
+      "name": "Gertrude’s Children’s Hospital",
+      "address": "Muthaiga Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "The Mater Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.83440951534271, -1.3073582166821127]
+    },
+    "properties": {
+      "phone": "020-6903000",
+      "email": "infom@materkenya.com",
+      "name": "The Mater Hospital",
+      "address": "Marikani Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 5,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Kenyatta University Teaching, Referral and Research Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.915833, -1.175833]
+    },
+    "properties": {
+      "phone": "0800721038",
+      "name": "Kenyatta University Teaching, Referral and Research Hospital",
+      "address": "Northern Bypass",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 6,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Aga Khan University Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.82367743236183, -1.2622706461173347]
+    },
+    "properties": {
+      "phone": "020-3662856",
+      "name": "Aga Khan University Hospital",
+      "address": "Third Parklands Avenue",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "M.P Shah Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.81165811994607, -1.2647112690993019]
+    },
+    "properties": {
+      "phone": "+254111000600",
+      "name": "M.P Shah Hospital",
+      "address": "Shivachi Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Nairobi South Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.82843225562809, -1.3137082658596146]
+    },
+    "properties": {
+      "phone": "020-5145300",
+      "name": "Nairobi South Hospital",
+      "address": "Muhoho Ave",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Avenue Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.817613823573346, -1.264756809390176]
+    },
+    "properties": {
+      "phone": "0711060000",
+      "name": "Avenue Hospital",
+      "address": "First Parklands Avenue",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Coptic Mission Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.7977521050752, -1.2985284746379429]
+    },
+    "properties": {
+      "phone": "0711043000",
+      "email": "info@copticmission.org",
+      "name": "Coptic Mission Hospital",
+      "address": "Ngong Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "The Karen Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.72617295173464, -1.3359897644859455]
+    },
+    "properties": {
+      "phone": "020-6613000",
+      "email": "info@karenhospital.org",
+      "name": "The Karen Hospital",
+      "address": "Langata Rd",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "St. Odilia's Dispensary",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.69068844380261, -1.310929747548302]
+    },
+    "properties": {
+      "phone": "020-3883137",
+      "name": "St. Odilia's Dispensary",
+      "address": "Windy Ridge rd",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Health Centre",
+      "level": 2,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "St Mary's Mission Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.7745582371447, -1.322820832917922]
+    },
+    "properties": {
+      "phone": "020-2052720",
+      "email": "bahatiodemary@yahoo.com",
+      "name": "St Mary's Mission Hospital",
+      "address": "Sasuma Crescent",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Hospital",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Langata Hospital",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.789294323999975, -1.3277620818247555]
+    },
+    "properties": {
+      "phone": "020-604893",
+      "email": "info@langatahospital.org",
+      "name": "Langata Hospital",
+      "address": "Kitengela Road",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Health Centre",
+      "level": 4,
+      "isPrivate": true
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  },
+  {
+    "name": "Kibera South Health Centre",
+    "type": "Feature",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [36.78898098237847, -1.3149363146894448]
+    },
+    "properties": {
+      "phone": "0720115087",
+      "name": "Kibera South Health Centre",
+      "address": "Kabarnet CL",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "state": "Nairobi City County",
+      "type": "Health Centre",
+      "level": 3,
+      "isPrivate": false
+    },
+    "created": "2023-05-21T14:53:16.641+00:00",
+    "updated": "2023-05-21T14:53:16.641+00:00"
+  }
+]
