@@ -1,43 +1,76 @@
-# Health Facility Locator (hfl)
+# Health Facility Locator - HFL
 
 Health Facility Locator. Number one healthcare facility locator in Kenya. Find healthcare facilities near you, their main services, capacity and ownership.
 
-## Install the dependencies
+## Project Structure
 
-```bash
-yarn
-# or
-npm install
+QuizForgeArena is organized as a full-stack application with separate frontend and backend projects.
+
+```text
+hfl/
+│
+├── frontend/       # Vue3 + Quasar Framework frontend
+├── server/         # Node.js + Express.js + MongoDB
+├── README.md
+├── LICENSE
+└── ...
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+### Frontend
+
+The `frontend` directory contains the Vue3 application responsible for the user interface and client-side interactions.
+
+**Technologies:**
+
+- Vue3
+- TypeScript
+- Quasar Framework
+- API integration
+
+See the [frontend README](./frontend/README.md) for setup instructions and frontend-specific documentation.
+
+### Backend
+
+The `server` directory contains the Node.js and Express.js APIs
+
+**Technologies:**
+
+- Node.js
+- Express.js
+- MongoDB
+- APIs
+
+See the [server README](./server/README.md) for backend setup instructions and API documentation.
+
+## Getting Started
+
+Clone the repository:
 
 ```bash
-quasar dev
+git clone https://github.com/gdkimaiyo/hfl.git
+cd hfl
 ```
 
-### Lint the files
+The frontend and backend are maintained as separate applications. Follow the setup instructions in each directory's README.
+
+### Start the Backend
 
 ```bash
-yarn lint
-# or
-npm run lint
+cd server
 ```
 
-### Format the files
+Follow the instructions in [`server/README.md`](./server/README.md).
+
+### Start the Frontend
 
 ```bash
-yarn format
-# or
-npm run format
+cd frontend
 ```
 
-### Build the app for production
+Follow the instructions in [`frontend/README.md`](./frontend/README.md).
 
-```bash
-quasar build
-```
+## License
 
-### Customize the configuration
+Copyright © 2026 QuizForgeArena. All rights reserved.
 
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+[License](LICENSE)

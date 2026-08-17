@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ext": "js",
+  "ignore": ["src/**/*.spec.js"],
+  "exec": "babel-node --inspect-brk -r @babel/register -- ./src/index.js"
+}

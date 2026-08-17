@@ -1,0 +1,46 @@
+name: Tests
+
+# on:
+#   push:
+#     branches:
+#       - "*"
+#       - "!master"
+
+on:
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - "server/**"
+
+jobs:
+  build:
+    name: Run Unit Tests - Server
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+          cache-dependency-path: "server/yarn.lock"
+
+      - name: Run Tests
+        run: |
+          # yarn install
+          yarn --cwd server install --frozen-lockfile
+          yarn test
+        env:
+          CI: true
+          PORT: ${{ secrets.PORT }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          DB_URL: ${{ secrets.DB_URL }}
