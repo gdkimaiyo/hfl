@@ -71,6 +71,4 @@ Follow the instructions in [`frontend/README.md`](./frontend/README.md).
 
 ## License
 
-Copyright © 2026 QuizForgeArena. All rights reserved.
-
 [License](LICENSE)
