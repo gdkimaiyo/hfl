@@ -1,5 +1,7 @@
 # HFL API Service
 
+The APIs for the HFL app
+
 ## Setting up Project
 
 Set up environment variables according to `env.sample`

@@ -1,6 +1,6 @@
 # Health Facility Locator (hfl)
 
-Health Facility Locator. Number one healthcare facility locator in Kenya. Find healthcare facilities near you, their main services, capacity and ownership.
+The frontend app for the HFL App.
 
 ## Install the dependencies
 
