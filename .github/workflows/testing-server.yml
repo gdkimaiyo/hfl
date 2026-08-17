@@ -1,4 +1,4 @@
-name: Tests
+name: Tests - Server
 
 # on:
 #   push:
@@ -34,9 +34,11 @@ jobs:
           cache: "yarn"
           cache-dependency-path: "server/yarn.lock"
 
+      - name: Install dependencies
+        run: yarn --cwd server install --frozen-lockfile
+
       - name: Run Tests
         run: |
-          # yarn install
           yarn --cwd server install --frozen-lockfile
           yarn test
         env:
