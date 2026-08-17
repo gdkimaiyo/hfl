@@ -40,7 +40,7 @@ jobs:
       - name: Run Tests
         run: |
           yarn --cwd server install --frozen-lockfile
-          yarn test
+          yarn --cwd server test
         env:
           CI: true
           PORT: ${{ secrets.PORT }}

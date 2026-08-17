@@ -2,6 +2,8 @@
 
 The frontend app for the HFL App.
 
+Health Facility Locator. Number one healthcare facility locator in Kenya. Find healthcare facilities near you, their main services, capacity and ownership.
+
 ## Install the dependencies
 
 ```bash
