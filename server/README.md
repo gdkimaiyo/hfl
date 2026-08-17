@@ -1,6 +1,8 @@
 # HFL API Service
 
-The APIs for the HFL app
+The APIs for the HFL app.
+
+Health Facility Locator. Number one healthcare facility locator in Kenya. Find healthcare facilities near you, their main services, capacity and ownership.
 
 ## Setting up Project
 
