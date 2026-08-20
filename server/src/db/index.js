@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
-import environment from '../config/environment';
+import mongoose from "mongoose";
+import environment from "../config/environment";
 
 // Export models for app use
-export { default as Facility } from './models/Facility';
+export { default as Facility } from "./models/Facility";
 
 /**
  * Initializes the database connection and sets up event listeners for MongoDB connection states.
@@ -18,24 +18,24 @@ export const initializeDB = (logger) => {
   mongoose.connect(environment.DB_URL);
 
   // Event listener for successful connection
-  mongoose.connection.on('connected', () => {
-    logger('database connected');
+  mongoose.connection.on("connected", () => {
+    logger("database connected");
   });
 
   // Event listener for errors during the connection
-  mongoose.connection.on('error', () => {
-    logger('database connection error:');
+  mongoose.connection.on("error", () => {
+    logger("database connection error:");
   });
 
   // Event listener for when the connection is disconnected
-  mongoose.connection.on('disconnected', () => {
-    logger('database disconnected');
+  mongoose.connection.on("disconnected", () => {
+    logger("database disconnected");
   });
 
   // Gracefully close the connection if the node process is terminated
-  process.on('SIGINT', () => {
+  process.on("SIGINT", () => {
     mongoose.connection.close(() => {
-      logger('database disconnected through app termination');
+      logger("database disconnected through app termination");
       process.exit(0);
     });
   });

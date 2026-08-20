@@ -1,5 +1,5 @@
-import { defineBoot } from '#q-app/wrappers';
-import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
+import { defineBoot } from "#q-app/wrappers";
+import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query";
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli-vite/boot-files

@@ -14,13 +14,13 @@ export default class FormatData {
     const cleaned = newData;
 
     Object.keys(cleaned).map((key) => {
-      if (typeof cleaned[key] === 'string') {
+      if (typeof cleaned[key] === "string") {
         cleaned[key] = cleaned[key].trim();
       }
-      if (cleaned[key] && typeof cleaned[key] === 'object' && cleaned[key].constructor === Array) {
+      if (cleaned[key] && typeof cleaned[key] === "object" && cleaned[key].constructor === Array) {
         cleaned[key] = cleaned[key].map((item) => FormatData.trim(item));
       }
-      if (cleaned[key] && typeof cleaned[key] === 'object' && cleaned[key].constructor === Object) {
+      if (cleaned[key] && typeof cleaned[key] === "object" && cleaned[key].constructor === Object) {
         cleaned[key] = FormatData.trim(cleaned[key]);
       }
       return cleaned;

@@ -1,5 +1,5 @@
-import { LRUCache } from 'lru-cache';
-import Utils from '../utils';
+import { LRUCache } from "lru-cache";
+import Utils from "../utils";
 
 /**
  * Options for configuring cache expiration in LRUCache.

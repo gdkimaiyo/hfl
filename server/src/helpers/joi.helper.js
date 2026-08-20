@@ -29,29 +29,29 @@ export default class JoiHelper {
    */
   static handleError(errorDetails) {
     const errorObject = {
-      errorMessage: 'validation error(s) detected',
+      errorMessage: "validation error(s) detected",
     };
     errorDetails.forEach(({ message, type, context, context: { label } }) => {
       switch (type) {
-        case 'any.required':
+        case "any.required":
           errorObject[`${label}`] = `Please provide ${label}`;
           break;
-        case 'any.allowOnly':
+        case "any.allowOnly":
           errorObject[`${label}`] = `only ${context.valids} are allowed`;
           break;
-        case 'number.base':
+        case "number.base":
           errorObject[`${label}`] = `${label} should be a number`;
           break;
-        case 'number.min':
+        case "number.min":
           errorObject[`${label}`] = `${label} should not be less than ${context.limit}`;
           break;
-        case 'number.max':
+        case "number.max":
           errorObject[`${label}`] = `${label} should not be greater than ${context.limit}`;
           break;
-        case 'string.email':
-          errorObject[`${label}`] = 'please provide a valid email address';
+        case "string.email":
+          errorObject[`${label}`] = "please provide a valid email address";
           break;
-        case 'string.regex.base':
+        case "string.regex.base":
           errorObject[`${label}`] = `please provide a valid ${label}`;
           break;
         default:

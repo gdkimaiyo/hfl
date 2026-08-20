@@ -1,7 +1,7 @@
-import { orderBy } from 'lodash';
+import { orderBy } from "lodash";
 
-import facilityService from './facility.service';
-import ResponseHelper from '../../helpers/response.helper';
+import facilityService from "./facility.service";
+import ResponseHelper from "../../helpers/response.helper";
 
 /**
  * FacilityController.
@@ -18,11 +18,11 @@ class FacilityController {
       const facilities = await facilityService.getAll();
 
       if (facilities) {
-        const facilitiesOrder = orderBy(facilities, ['created'], ['desc']);
-        return ResponseHelper.sendResponse(res, 200, 'facilities fetched successfully', facilitiesOrder);
+        const facilitiesOrder = orderBy(facilities, ["created"], ["desc"]);
+        return ResponseHelper.sendResponse(res, 200, "facilities fetched successfully", facilitiesOrder);
       }
     } catch (error) {
-      console.log('Error', error);
+      console.log("Error", error);
     }
   }
 
@@ -38,11 +38,11 @@ class FacilityController {
     try {
       const facility = await facilityService.getOne(id);
       if (facility) {
-        return ResponseHelper.sendResponse(res, 200, 'facility fetched successfully', facility);
+        return ResponseHelper.sendResponse(res, 200, "facility fetched successfully", facility);
       }
-      return ResponseHelper.sendResponse(res, 404, 'facility not found');
+      return ResponseHelper.sendResponse(res, 404, "facility not found");
     } catch (error) {
-      console.log('Error', error);
+      console.log("Error", error);
     }
   }
 }

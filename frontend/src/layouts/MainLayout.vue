@@ -11,14 +11,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 // Components
-import NavBar from '../components/NavBar.vue';
-import FooterBar from '../components/FooterBar.vue';
+import NavBar from "../components/NavBar.vue";
+import FooterBar from "../components/FooterBar.vue";
 
 export default defineComponent({
-  name: 'MainLayout',
+  name: "MainLayout",
 
   components: {
     NavBar,

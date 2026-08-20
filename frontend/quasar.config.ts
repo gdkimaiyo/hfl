@@ -1,8 +1,8 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-import { defineConfig } from '#q-app/wrappers';
-import dotenv from 'dotenv';
+import { defineConfig } from "#q-app/wrappers";
+import dotenv from "dotenv";
 
 export default defineConfig((/* ctx */) => {
   dotenv.config();
@@ -15,30 +15,30 @@ export default defineConfig((/* ctx */) => {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     // boot: ['i18n', 'axios', 'vue-query'],
-    boot: ['vue-query'],
+    boot: ["vue-query"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
-    css: ['app.scss'],
+    css: ["app.scss"],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
       // 'mdi-v7',
-      'fontawesome-v6',
+      "fontawesome-v6",
       // 'eva-icons',
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
-      'roboto-font', // optional, you are not bound to it
-      'material-icons', // optional, you are not bound to it
+      "roboto-font", // optional, you are not bound to it
+      "material-icons", // optional, you are not bound to it
     ],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
       target: {
-        browser: 'baseline-widely-available',
-        node: 'node22',
+        browser: "baseline-widely-available",
+        node: "node22",
       },
 
       typescript: {
@@ -48,7 +48,7 @@ export default defineConfig((/* ctx */) => {
       },
 
       // vueRouterMode: 'hash', // available values: 'hash', 'history'
-      vueRouterMode: 'history', // available values: 'hash', 'history'
+      vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -72,7 +72,7 @@ export default defineConfig((/* ctx */) => {
 
       vitePlugins: [
         [
-          'vite-plugin-checker',
+          "vite-plugin-checker",
           {
             vueTsc: true,
             eslint: {
@@ -106,7 +106,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Notify', 'Dialog'],
+      plugins: ["Notify", "Dialog"],
     },
 
     // animations: 'all', // --- includes all animations
@@ -132,7 +132,7 @@ export default defineConfig((/* ctx */) => {
       // (gets superseded if process.env.PORT is specified at runtime)
 
       middlewares: [
-        'render', // keep this as last one
+        "render", // keep this as last one
       ],
 
       // extendPackageJson (json) {},
@@ -152,9 +152,9 @@ export default defineConfig((/* ctx */) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      swFilename: 'sw.js',
-      manifestFilename: 'manifest.json',
+      workboxMode: "GenerateSW", // 'GenerateSW' or 'InjectManifest'
+      swFilename: "sw.js",
+      manifestFilename: "manifest.json",
       // extendManifestJson (json) {},
       useCredentialsForManifestTag: true,
       // injectPwaMetaTags: false,
@@ -181,12 +181,12 @@ export default defineConfig((/* ctx */) => {
       // extendPackageJson (json) {},
 
       // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
-      preloadScripts: ['electron-preload'],
+      preloadScripts: ["electron-preload"],
 
       // specify the debugging port to use for the Electron app when running in development mode
       inspectPort: 5858,
 
-      bundler: 'packager', // 'packager' or 'builder'
+      bundler: "packager", // 'packager' or 'builder'
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
@@ -202,7 +202,7 @@ export default defineConfig((/* ctx */) => {
       builder: {
         // https://www.electron.build/configuration
 
-        appId: 'hfl',
+        appId: "hfl",
       },
     },
 

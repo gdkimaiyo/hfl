@@ -1,9 +1,9 @@
 export type FacilityFeature = {
   _id: string;
-  type: 'Feature';
+  type: "Feature";
   name: string;
   geometry: {
-    point: 'Point';
+    point: "Point";
     coordinates: [number, number]; // [longitude, latitude]
   };
   properties: Property;
@@ -29,6 +29,6 @@ export type Property = {
 };
 
 export type FacilityGeoJSON = {
-  type: 'FeatureCollection';
+  type: "FeatureCollection";
   features: FacilityFeature[];
 };

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
@@ -13,7 +13,7 @@ const propertiesSchema = new Schema(
     country: { type: String, required: true },
     postalCode: { type: String, required: false },
     state: { type: String, required: true },
-    type: { type: String, required: true, default: 'Hospital' },
+    type: { type: String, required: true, default: "Hospital" },
     level: { type: Number, required: true, default: 2 },
     isPrivate: { type: Boolean, required: true, default: false },
   },
@@ -22,7 +22,7 @@ const propertiesSchema = new Schema(
 
 const geometrySchema = new Schema(
   {
-    point: { type: String, enum: ['Point'], required: true, default: 'Point' },
+    point: { type: String, enum: ["Point"], required: true, default: "Point" },
     coordinates: {
       type: [Number], // [longitude, latitude]
       required: true,
@@ -33,17 +33,17 @@ const geometrySchema = new Schema(
 
 const facilitySchema = new Schema({
   name: { type: String, required: true },
-  type: { type: String, enum: ['Feature'], required: true, default: 'Feature' },
+  type: { type: String, enum: ["Feature"], required: true, default: "Feature" },
   // geometry: geometrySchema,
-  geometry: { 
-    type: geometrySchema, 
-    required: [true, 'Geometry data is mandatory'] 
+  geometry: {
+    type: geometrySchema,
+    required: [true, "Geometry data is mandatory"],
   },
   properties: propertiesSchema,
   created: { type: Date, default: Date.now },
   updated: { type: Date },
 });
 
-const Facility = mongoose.model('facilities', facilitySchema);
+const Facility = mongoose.model("facilities", facilitySchema);
 
 export default Facility;
