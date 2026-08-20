@@ -147,8 +147,6 @@ export default defineComponent({
       queryFn: async () => {
         const response = await getFacilities();
 
-        console.log(response.data);
-
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
         const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
 
@@ -384,7 +382,7 @@ export default defineComponent({
       facilities.value?.features.forEach((facility) => {
         if (facility.properties.id === selectedFacility.value) {
           flyToFacility(facility);
-          createPopUp(facility);
+          // createPopUp(facility);
           if (userLocation.value) {
             // void drawRoute(facility.geometry.coordinates);
 
@@ -395,17 +393,6 @@ export default defineComponent({
           }
         }
       });
-
-      if (selectedFacility.value !== null) {
-        console.log("we are here...");
-        const active = facilities.value?.features.find(
-          (f) => f.properties.id === selectedFacility.value,
-        );
-        if (active) {
-          console.log("we are here2222...");
-          createPopUp(active);
-        }
-      }
     };
 
     const addMarkers = (data: FacilityGeoJSON) => {
@@ -428,13 +415,13 @@ export default defineComponent({
           return found || marker;
         };
 
-        // Fly, popup with distance, select facility and draw route
+        // Center map, draw route, and highlight selection (NO POPUP)
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           const activeFeature = getActiveFeature();
 
           flyToFacility(activeFeature);
-          createPopUp(activeFeature);
+          // createPopUp(activeFeature);
           selectedFacility.value = activeFeature.properties.id ?? null;
 
           if (userLocation.value) {
@@ -447,11 +434,19 @@ export default defineComponent({
           }
         });
 
-        // MOUSEOVER EVENT: Show popup with distance on hover
+        // Show popup with facility distance ONLY on hover
         el.addEventListener("mouseover", (e) => {
           e.stopPropagation();
           const activeFeature = getActiveFeature();
           createPopUp(activeFeature);
+        });
+
+        // Remove popup when mouse moves away
+        el.addEventListener("mouseleave", () => {
+          const popUps = document.getElementsByClassName("mapboxgl-popup");
+          if (popUps[0]) {
+            popUps[0].remove();
+          }
         });
       });
     };
@@ -482,12 +477,13 @@ export default defineComponent({
     const createPopUp = (currentFeature: FacilityFeature) => {
       if (!map.value) return;
 
+      // Clear existing popups to prevent duplicates
       const popUps = document.getElementsByClassName("mapboxgl-popup");
       if (popUps[0]) popUps[0].remove();
 
       const distText =
         currentFeature.properties.distance !== undefined
-          ? `<p style="padding: 0 10px 0 10px; color: #0d1441; font-weight: bold;">
+          ? `<p style="padding: 4px 10px 0 4px; color: #0d1441; font-weight: bold;">
           <i class="fas fa-car"></i> ${currentFeature.properties.distance} km away
          </p>`
           : "";
