@@ -2,27 +2,51 @@
   <q-header id="navbar">
     <q-toolbar class="toolbar bg-white text-primary q-py-sm">
       <q-toolbar-title>
-        <a class="logo-btn" clickable @click="goHome()">
-          <span>
-            <q-icon name="fas fa-location-dot" />
-            <q-icon name="fas fa-h" size="16px" />
-          </span>
-          <span>
-            <q-icon name="fas fa-f" size="16px" />
-          </span>
-          <span>
-            <q-icon name="fas fa-l" size="16px" />
-          </span>
+        <a class="logo-btn cursor-pointer" @click="goHome()">
+          <img
+            src="../assets/hospital_icon_24_primary.png"
+            alt="HealthFacilityLocator logo"
+            class="logo-img"
+          />
+          <span class="logo-text"> HealthFacility<span class="text-negative">Locator</span> </span>
         </a>
       </q-toolbar-title>
 
       <div>
-        <a class="nav-btn gt-xs" clickable @click="goTo('/about-us')">
+        <a
+          class="nav-btn gt-xs"
+          :class="{ 'text-negative': currentRoute === '/' }"
+          clickable
+          @click="goTo('/')"
+        >
+          <q-icon name="fas fa-square-info" size="18px" />
+          Home
+        </a>
+        <a
+          class="nav-btn gt-xs"
+          :class="{ 'text-negative': currentRoute === '/facilities' }"
+          clickable
+          @click="goTo('/facilities')"
+        >
+          <q-icon name="fas fa-square-info" size="18px" />
+          Facilities
+        </a>
+        <a
+          class="nav-btn gt-xs"
+          :class="{ 'text-negative': currentRoute === '/about-us' }"
+          clickable
+          @click="goTo('/about-us')"
+        >
           <q-icon name="fas fa-square-info" size="18px" />
           About
         </a>
 
-        <a class="nav-btn gt-xs" clickable @click="goTo('/help')">
+        <a
+          class="nav-btn gt-xs"
+          :class="{ 'text-negative': currentRoute === '/help' }"
+          clickable
+          @click="goTo('/help')"
+        >
           <q-icon name="fas fa-square-question" size="18px" />
           Help
         </a>
@@ -51,13 +75,43 @@
             >
               <q-item
                 class="q-pl-xl"
+                :class="{ 'active-q-item': currentRoute === '/' }"
+                exact
+                clickable
+                v-ripple
+              >
+                <q-item-section style="display: inline-block; padding-top: 6px" @click="goTo('/')">
+                  <q-icon name="fas fa-house-chimney-window" class="q-pr-sm" />
+                  Home
+                </q-item-section>
+              </q-item>
+              <q-item
+                class="q-pl-xl"
+                :class="{ 'active-q-item': currentRoute === '/facilities' }"
+                exact
+                clickable
+                v-ripple
+              >
+                <q-item-section
+                  style="display: inline-block; padding-top: 6px"
+                  @click="goTo('/facilities')"
+                >
+                  <q-icon name="far fa-hospital" class="q-pr-sm" />
+                  Facilities
+                </q-item-section>
+              </q-item>
+              <q-item
+                class="q-pl-xl"
                 :class="{ 'active-q-item': currentRoute === '/about-us' }"
                 exact
                 clickable
                 v-ripple
               >
-                <q-item-section style="display: inline-block" @click="goTo('/about-us')">
-                  <q-icon name="fas fa-square-info" class="q-pr-sm" />
+                <q-item-section
+                  style="display: inline-block; padding-top: 6px"
+                  @click="goTo('/about-us')"
+                >
+                  <q-icon name="fas fa-circle-info" color="white" class="q-pr-sm" />
                   About
                 </q-item-section>
               </q-item>
@@ -69,8 +123,11 @@
                 clickable
                 v-ripple
               >
-                <q-item-section style="display: inline-block" @click="goTo('/help')">
-                  <q-icon name="fas fa-square-question" class="q-pr-sm" />
+                <q-item-section
+                  style="display: inline-block; padding-top: 6px"
+                  @click="goTo('/help')"
+                >
+                  <q-icon name="fas fa-question" class="q-pr-sm" />
                   Help
                 </q-item-section>
               </q-item>
@@ -132,10 +189,8 @@ export default defineComponent({
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 16px 16px 8px 16px;
 }
-.logo-btn,
 .nav-btn {
   font-size: 15px;
   cursor: pointer;
@@ -143,9 +198,31 @@ export default defineComponent({
   margin-right: 18px;
   text-decoration: none;
 }
+// .logo-btn {
+//   font-weight: 700;
+//   font-size: 1.7rem;
+// }
 .logo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  user-select: none;
+}
+
+.logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-text {
   font-weight: 700;
-  font-size: 1.7rem;
+  font-size: 1.17rem;
+  letter-spacing: -0.2px;
+  line-height: 1;
 }
 
 .menu-btn {
@@ -159,13 +236,11 @@ export default defineComponent({
 .dropdown-menu .q-item--active,
 .dropdown-menu .active-q-item {
   color: #ffffff !important;
-  background-color: #312c69 !important;
+  background-color: #c10015 !important;
 }
 @media only screen and (max-width: 575px) {
-  .logo-btn {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-right: 0;
+  .logo-text {
+    font-size: 1.1rem;
   }
   .toolbar {
     padding-left: 16px;

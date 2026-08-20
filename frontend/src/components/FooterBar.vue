@@ -1,9 +1,23 @@
 <template>
   <footer id="footer" class="footer">
     <div class="quick-links">
+      <div class="q-mt-lg">
+        <a class="logo-link cursor-pointer" @click="goHome()">
+          <img
+            src="../assets/hospital_icon_24_red.png"
+            alt="HealthFacilityLocator logo"
+            class="logo-img"
+          />
+          <span class="logo-text"> HealthFacility<span class="text-negative">Locator</span> </span>
+        </a>
+      </div>
+
       <!-- <div class="text-h5">Quick Links</div> -->
       <div class="nav-btn">
         <a class="q-pr-sm" clickable @click="goHome()">Home</a>
+      </div>
+      <div class="nav-btn">
+        <a class="q-pr-sm" clickable @click="goTo('/facilities')">Facilities</a>
       </div>
       <div class="nav-btn">
         <a class="q-pr-sm" clickable @click="goTo('/about-us')">About Us</a>
@@ -31,23 +45,6 @@
       <div class="q-mt-md">
         &copy;
         {{ year }}
-        <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
-        <a class="href-link" clickable @click="goHome()" style="color: #ffffff">
-          <span>
-            <q-icon name="fas fa-location-dot" />
-            <q-icon name="fas fa-h" size="12px" />
-          </span>
-          <span>
-            <q-icon name="fas fa-f" size="12px" />
-          </span>
-          <span>
-            <q-icon name="fas fa-l" size="12px" />
-          </span>
-        </a>
-        <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
-        <a class="href-link" clickable @click="goHome()" style="color: #ffffff">
-          Health Facility Locator
-        </a>
         <q-icon name="fas fa-circle" color="white" size="5px" style="padding: 0 6px" />
         All Rights Reserved
       </div>
@@ -91,6 +88,30 @@ export default defineComponent({
   width: 100%;
   color: #ffffff;
   background-color: #0d1441;
+  padding-bottom: 48px;
+}
+.logo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  user-select: none;
+  margin-bottom: 48px;
+}
+
+.logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.2px;
+  line-height: 1;
 }
 .href-link {
   text-decoration: none;

@@ -4,7 +4,7 @@ Health Facility Locator. Number one healthcare facility locator in Kenya. Find h
 
 ## Project Structure
 
-QuizForgeArena is organized as a full-stack application with separate frontend and backend projects.
+HealthFacilityLocator is organized as a full-stack application with separate frontend and backend projects.
 
 ```text
 hfl/
