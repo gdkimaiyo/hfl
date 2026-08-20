@@ -1,4 +1,4 @@
-import FormatData from '../helpers/format-data';
+import FormatData from "../helpers/format-data";
 
 /**
  * Middleware to format and clean up incoming request bodies.

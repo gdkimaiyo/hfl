@@ -1,18 +1,18 @@
-import dotenv from 'dotenv-extended';
-import { resolve } from 'path';
+import dotenv from "dotenv-extended";
+import { resolve } from "path";
 
 /**
  * Get the current environment (e.g., 'development', 'production', 'test').
  * Defaults to an empty string if not set.
  * @type {string}
  */
-const envName = process.env.NODE_ENV ? process.env.NODE_ENV.toLowerCase() : '';
+const envName = process.env.NODE_ENV ? process.env.NODE_ENV.toLowerCase() : "";
 
 /**
  * Boolean indicating if the current environment is 'test'.
  * @type {boolean}
  */
-const isTest = envName === 'test';
+const isTest = envName === "test";
 
 /**
  * Resolve the path to the specific environment file (e.g., `.env.production`).
@@ -27,8 +27,8 @@ const path = resolve(__dirname, `../.env.${envName}`);
 dotenv.load({
   silent: true, // Suppress errors if .env files are missing (useful in CI/CD)
   path, // Path to the environment-specific .env file
-  defaults: resolve(__dirname, '../.env'), // Default .env values
-  schema: resolve(__dirname, '../.env.sample'), // Validates required variables
+  defaults: resolve(__dirname, "../.env"), // Default .env values
+  schema: resolve(__dirname, "../.env.sample"), // Validates required variables
   errorOnMissing: !isTest, // Allow missing vars only in test environment
   errorOnExtra: false, // Ignore extra variables
   errorOnRegex: false, // Skip regex validation

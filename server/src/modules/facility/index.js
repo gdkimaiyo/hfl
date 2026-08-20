@@ -1,5 +1,5 @@
-import express from 'express';
-import FacilityController from './facility.controller';
+import express from "express";
+import FacilityController from "./facility.controller";
 
 const facilityRouter = express.Router();
 
@@ -9,7 +9,7 @@ const facilityRouter = express.Router();
  * @returns {Object} 200 - Facilities object
  * @returns {Object} 404 - Facilities not found
  */
-facilityRouter.get('/facilities', FacilityController.getFacilities);
+facilityRouter.get("/facilities", FacilityController.getFacilities);
 
 /**
  * Retrieves a facility by their ID.
@@ -18,6 +18,6 @@ facilityRouter.get('/facilities', FacilityController.getFacilities);
  * @returns {Object} 200 - Facility object
  * @returns {Object} 404 - Facility not found
  */
-facilityRouter.get('/facilities/:id', FacilityController.getFacility);
+facilityRouter.get("/facilities/:id", FacilityController.getFacility);
 
 export default facilityRouter;

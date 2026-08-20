@@ -1,7 +1,7 @@
-import facilityRouter from './facility';
-import healthCheckRouter from './health-check';
+import facilityRouter from "./facility";
+import healthCheckRouter from "./health-check";
 
-const apiPrefix = '/api/v1';
+const apiPrefix = "/api/v1";
 
 /**
  * Registers application routes with their respective routers.
@@ -11,7 +11,7 @@ const apiPrefix = '/api/v1';
  */
 const routes = (app) => {
   app.use(apiPrefix, facilityRouter);
-  app.use('/health', healthCheckRouter);
+  app.use("/health", healthCheckRouter);
 
   return app;
 };

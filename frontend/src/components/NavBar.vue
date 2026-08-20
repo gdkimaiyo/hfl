@@ -85,11 +85,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { defineComponent, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 export default defineComponent({
-  name: 'NavBar',
+  name: "NavBar",
 
   setup() {
     const router = useRouter();
@@ -104,7 +104,7 @@ export default defineComponent({
 
     // Methods
     const goHome = async () => {
-      await router.push('/');
+      await router.push("/");
     };
 
     const goTo = async (targetRoute: string) => {
@@ -123,7 +123,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 #navbar {
-  font-family: 'Avenir';
+  font-family: "Avenir";
   background-color: rgba(255, 255, 255);
   backdrop-filter: blur(40px);
   border-bottom: 0.5px solid #0d1441;

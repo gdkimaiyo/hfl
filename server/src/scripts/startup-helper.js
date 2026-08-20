@@ -1,4 +1,4 @@
-import cache from '../cache';
+import cache from "../cache";
 
 /**
  * Helper class for performing startup-related tasks.

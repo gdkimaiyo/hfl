@@ -1,4 +1,4 @@
-import { Facility } from '../../db';
+import { Facility } from "../../db";
 
 class FacilityService {
   /**

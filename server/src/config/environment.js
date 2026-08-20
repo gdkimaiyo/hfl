@@ -1,4 +1,4 @@
-import '../load-env';
+import "../load-env";
 
 /**
  * Centralized environment configuration object.
@@ -13,7 +13,7 @@ import '../load-env';
 const environment = {
   ...process.env,
   PORT: process.env.PORT || 5002,
-  NODE_ENV: process.env.NODE_ENV || 'production',
+  NODE_ENV: process.env.NODE_ENV || "production",
   REDIS_URL: process.env.REDIS_URL,
   CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS,
 
@@ -22,7 +22,7 @@ const environment = {
 
 // Add derived property for easier checks throughout the app
 Object.assign(environment, {
-  isDevelopment: environment.NODE_ENV === 'development' || environment.NODE_ENV === 'dev',
+  isDevelopment: environment.NODE_ENV === "development" || environment.NODE_ENV === "dev",
 });
 
 export default environment;

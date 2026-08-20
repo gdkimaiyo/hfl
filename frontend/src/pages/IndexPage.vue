@@ -118,13 +118,14 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import distance from "@turf/distance";
 import { point } from "@turf/helpers";
 import { useQuery } from "@tanstack/vue-query";
-import { MAPBOX_TOKEN } from "src/secrets.config";
+import { MAPBOX_TOKEN } from "../secrets.config";
 
 // Services
-import { getFacilities } from "src/services/facility.service";
+import { getFacilities } from "../services/facility.service";
 
 // Types
-import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
+import type { FacilityFeature, FacilityGeoJSON } from "../types/facility.types";
+// import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
 export default defineComponent({
   name: "IndexPage",

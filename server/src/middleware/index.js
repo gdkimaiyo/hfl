@@ -1,4 +1,4 @@
-import FormatRequestBody from './format-request-body';
+import FormatRequestBody from "./format-request-body";
 
 const middleware = {
   FormatRequestBody,

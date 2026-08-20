@@ -56,11 +56,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { defineComponent, ref } from "vue";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
-  name: 'FooterBar',
+  name: "FooterBar",
 
   setup() {
     const router = useRouter();
@@ -68,7 +68,7 @@ export default defineComponent({
 
     // Methods
     const goHome = async () => {
-      await router.push('/');
+      await router.push("/");
     };
 
     const goTo = async (route: string) => {

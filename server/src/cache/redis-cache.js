@@ -1,7 +1,7 @@
-import redis from 'redis';
-import { promisify } from 'util';
-import environment from '../config/environment';
-import Utils from '../utils';
+import redis from "redis";
+import { promisify } from "util";
+import environment from "../config/environment";
+import Utils from "../utils";
 
 /**
  * Singleton class for Redis caching.

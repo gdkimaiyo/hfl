@@ -1,10 +1,10 @@
-import fs from 'fs';
-import fileSystem from 'fs-extra';
-import https from 'https';
-import http from 'http';
-import { v4 as uuid } from 'uuid';
-import url from 'url';
-import crypto from 'crypto';
+import fs from "fs";
+import fileSystem from "fs-extra";
+import https from "https";
+import http from "http";
+import { v4 as uuid } from "uuid";
+import url from "url";
+import crypto from "crypto";
 
 /**
  * Utility helper class with various formatting, date, file, and general-purpose functions.
@@ -26,7 +26,7 @@ class Utils {
    */
   static formatDate(dateStr) {
     const date = new Date(dateStr);
-    return moment(date).format('ddd, MMM Do YYYY hh:mm a');
+    return moment(date).format("ddd, MMM Do YYYY hh:mm a");
   }
 
   /**
@@ -35,16 +35,16 @@ class Utils {
    */
   static formattedDate() {
     const dt = Date.now();
-    const formattedDate = new Intl.DateTimeFormat('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hourCycle: 'h12',
+    const formattedDate = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hourCycle: "h12",
     })
       .format(dt)
-      .replace(/(\d{4}),/, '$1');
+      .replace(/(\d{4}),/, "$1");
 
     return formattedDate;
   }
@@ -54,7 +54,7 @@ class Utils {
    * @returns {string}
    */
   static getPreviousMonth() {
-    return moment().date(0).format('MMM, YYYY');
+    return moment().date(0).format("MMM, YYYY");
   }
 
   /**
@@ -63,10 +63,10 @@ class Utils {
    * @param {string} [timezone='Africa/Nairobi']
    * @returns {string}
    */
-  static formatDateForDatabase(dateStr, timezone = 'Africa/Nairobi') {
-    if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  static formatDateForDatabase(dateStr, timezone = "Africa/Nairobi") {
+    if (!dateStr || typeof dateStr !== "string") return dateStr;
     const formattedDate = DateDialogHelper.changeDateFormat(dateStr);
-    return momenttz.tz(formattedDate, 'MM/DD/YYYY HH:mm', timezone).toISOString();
+    return momenttz.tz(formattedDate, "MM/DD/YYYY HH:mm", timezone).toISOString();
   }
 
   /**
@@ -95,8 +95,8 @@ class Utils {
    * @returns {string}
    */
   static removeHoursFromDate(noOfHours, date) {
-    const rawDate = moment(date, 'DD/MM/YYYY HH:mm').subtract(noOfHours, 'hours');
-    return rawDate.format('DD/MM/YYYY HH:mm');
+    const rawDate = moment(date, "DD/MM/YYYY HH:mm").subtract(noOfHours, "hours");
+    return rawDate.format("DD/MM/YYYY HH:mm");
   }
 
   /**
@@ -127,7 +127,7 @@ class Utils {
    * @returns {string}
    */
   static formatTime(time) {
-    return moment(time.trim(), 'HH:mm').format('LT');
+    return moment(time.trim(), "HH:mm").format("LT");
   }
 
   /**
@@ -151,8 +151,8 @@ class Utils {
    */
   static convertToImageAndSaveToLocal(uri, destination) {
     const theUrl = url.parse(uri);
-    if (!theUrl.host) throw new Error('Requested URL is invalid');
-    const client = theUrl.protocol === 'https:' ? https : http;
+    if (!theUrl.host) throw new Error("Requested URL is invalid");
+    const client = theUrl.protocol === "https:" ? https : http;
     Utils.createDirectory(destination);
     const filename = uuid();
     return new Promise((resolve, reject) => {
@@ -161,13 +161,13 @@ class Utils {
       client
         .get(uri, (response) => {
           response.pipe(file);
-          file.on('finish', () => {
+          file.on("finish", () => {
             file.close(() => {
               resolve(file.path);
             });
           });
         })
-        .on('error', (err) => {
+        .on("error", (err) => {
           fs.unlink(fileDir, () => {});
           reject(err);
         });

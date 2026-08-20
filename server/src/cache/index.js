@@ -1,6 +1,6 @@
-import environment from '../config/environment';
-import RedisCacheSingleton from './redis-cache';
-import LRUCacheSingleton from './lru-cache';
+import environment from "../config/environment";
+import RedisCacheSingleton from "./redis-cache";
+import LRUCacheSingleton from "./lru-cache";
 
 /**
  * Cache instance that switches between Redis or LRU based on environment configuration.
@@ -11,7 +11,7 @@ import LRUCacheSingleton from './lru-cache';
  * @type {RedisCacheSingleton|LRUCacheSingleton}
  */
 const cache =
-  environment.REDIS_URL && environment.REDIS_URL.startsWith('redis')
+  environment.REDIS_URL && environment.REDIS_URL.startsWith("redis")
     ? new RedisCacheSingleton()
     : new LRUCacheSingleton();
 
