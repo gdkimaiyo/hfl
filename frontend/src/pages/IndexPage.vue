@@ -16,7 +16,7 @@
           class="q-px-lg q-py-xs"
           rounded
           unelevated
-          @click="locateUserAndSort"
+          @click="locateUser"
         />
       </div>
     </div>
@@ -147,6 +147,8 @@ export default defineComponent({
       queryFn: async () => {
         const response = await getFacilities();
 
+        console.log(response.data);
+
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
         const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
 
@@ -211,7 +213,7 @@ export default defineComponent({
     });
 
     // GET DEVICE LOCATION & SORT FACILITIES BY TURF DISTANCE
-    const locateUserAndSort = () => {
+    const locateUser = () => {
       return new Promise<void>((resolve) => {
         if (!navigator.geolocation) {
           Notify.create({ type: "warning", message: "Geolocation not supported by browser." });
@@ -393,6 +395,17 @@ export default defineComponent({
           }
         }
       });
+
+      if (selectedFacility.value !== null) {
+        console.log("we are here...");
+        const active = facilities.value?.features.find(
+          (f) => f.properties.id === selectedFacility.value,
+        );
+        if (active) {
+          console.log("we are here2222...");
+          createPopUp(active);
+        }
+      }
     };
 
     const addMarkers = (data: FacilityGeoJSON) => {
@@ -407,24 +420,38 @@ export default defineComponent({
           .setLngLat(marker.geometry.coordinates)
           .addTo(map.value);
 
+        // Get feature with updated distance from computed facilities
+        const getActiveFeature = (): FacilityFeature => {
+          const found = facilities.value?.features.find(
+            (f) => f.properties.id === marker.properties.id,
+          );
+          return found || marker;
+        };
+
+        // Fly, popup with distance, select facility and draw route
         el.addEventListener("click", (e) => {
-          flyToFacility(marker);
-          createPopUp(marker);
+          e.stopPropagation();
+          const activeFeature = getActiveFeature();
+
+          flyToFacility(activeFeature);
+          createPopUp(activeFeature);
+          selectedFacility.value = activeFeature.properties.id ?? null;
+
           if (userLocation.value) {
-            // void drawRoute(marker.geometry.coordinates);
+            // void drawRoute(activeFeature.geometry.coordinates);
 
             // Alternative
-            drawRoute(marker.geometry.coordinates).catch((err) => {
+            drawRoute(activeFeature.geometry.coordinates).catch((err) => {
               console.error("Failed to fetch route:", err);
             });
           }
-          e.stopPropagation();
-          selectedFacility.value = marker.properties.id ?? null;
         });
 
+        // MOUSEOVER EVENT: Show popup with distance on hover
         el.addEventListener("mouseover", (e) => {
-          createPopUp(marker);
           e.stopPropagation();
+          const activeFeature = getActiveFeature();
+          createPopUp(activeFeature);
         });
       });
     };
@@ -458,16 +485,19 @@ export default defineComponent({
       const popUps = document.getElementsByClassName("mapboxgl-popup");
       if (popUps[0]) popUps[0].remove();
 
-      const distText = currentFeature.properties.distance
-        ? `<p style="margin:4px 0 0; color:#0d1441; font-weight:bold;">${currentFeature.properties.distance} km away</p>`
-        : "";
+      const distText =
+        currentFeature.properties.distance !== undefined
+          ? `<p style="padding: 0 10px 0 10px; color: #0d1441; font-weight: bold;">
+          <i class="fas fa-car"></i> ${currentFeature.properties.distance} km away
+         </p>`
+          : "";
 
-      new mapboxgl.Popup({ closeOnClick: false })
+      new mapboxgl.Popup({ closeOnClick: false, offset: 10 })
         .setLngLat(currentFeature.geometry.coordinates)
         .setHTML(
           `<h3>${currentFeature.properties.name}</h3>
-         <h4>${currentFeature.properties.address}</h4>
-         ${distText}`,
+       <h4>${currentFeature.properties.address}</h4>
+       ${distText}`,
         )
         .addTo(map.value);
     };
@@ -479,7 +509,7 @@ export default defineComponent({
 
         // Ensure data came back safely and the DOM container exists
         if (result.data && result.data.features?.length > 0) {
-          await locateUserAndSort();
+          await locateUser();
           await nextTick();
           mapboxMap(result.data);
         }
@@ -520,7 +550,7 @@ export default defineComponent({
       isLocating,
       userLocation,
       showFacility,
-      locateUserAndSort,
+      locateUser,
     };
   },
 });
