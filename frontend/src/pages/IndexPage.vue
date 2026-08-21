@@ -1,29 +1,11 @@
 <template>
   <q-page class="column q-pb-xl">
-    <!-- LANDING PAGE HERO SECTION -->
-    <div class="hero-section text-white q-py-xl q-px-md text-center">
-      <div class="hero-content">
-        <h1 class="text-h3 text-bold q-mb-sm">Find Nearby Healthcare Services Fast</h1>
-        <p class="text-subtitle1 q-mb-lg">
-          Locate public and private health facilities around Nairobi, check distance, and get
-          real-time navigation.
-        </p>
-        <q-btn
-          color="secondary"
-          icon="my_location"
-          :loading="isLocating"
-          label="Locate Near Me"
-          class="q-px-lg q-py-xs"
-          rounded
-          unelevated
-          @click="locateUser"
-        />
-      </div>
-    </div>
+    <HeroSection />
+    <StatsSection />
 
-    <div class="main-page q-pa-md q-mt-sm">
+    <div id="facilities-near-me" ref="#facilities-near-me" class="main-page q-pa-md">
       <div class="row items-center justify-between q-mb-sm">
-        <div class="text-h5 page-header q-mb-none">Health Facility Locator</div>
+        <div class="text-h4 text-bold page-header q-mb-none">Facilities Near Me</div>
         <q-badge v-if="userLocation" color="positive" class="q-pa-xs">
           <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your position
         </q-badge>
@@ -50,14 +32,13 @@
               :class="{ active: selectedFacility === facility.properties.id }"
               @click="showFacility(facility.properties.id ?? 0)"
             >
-              <a
-                href="#"
+              <div
                 :id="'link-' + facility.properties.id"
                 class="title"
                 :class="{ active: selectedFacility === facility.properties.id }"
               >
                 {{ facility.properties.name }}
-              </a>
+              </div>
               <div>
                 <span>{{ facility.properties.address }}</span>
                 <q-icon name="fas fa-circle" size="3px" style="padding: 0 6px" />
@@ -120,6 +101,10 @@ import { point } from "@turf/helpers";
 import { useQuery } from "@tanstack/vue-query";
 import { MAPBOX_TOKEN } from "../secrets.config";
 
+// Components
+import HeroSection from "../components/home/HeroSection.vue";
+import StatsSection from "../components/home/StatsSection.vue";
+
 // Services
 import { getFacilities } from "../services/facility.service";
 
@@ -127,8 +112,16 @@ import { getFacilities } from "../services/facility.service";
 import type { FacilityFeature, FacilityGeoJSON } from "../types/facility.types";
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
+// Utils
+import { createPopUp } from "../utils/helpers";
+
 export default defineComponent({
   name: "IndexPage",
+
+  components: {
+    HeroSection,
+    StatsSection,
+  },
 
   setup() {
     const accessToken = ref(MAPBOX_TOKEN);
@@ -210,7 +203,7 @@ export default defineComponent({
       };
     });
 
-    // GET DEVICE LOCATION & SORT FACILITIES BY TURF DISTANCE
+    // GET DEVICE LOCATION
     const locateUser = () => {
       return new Promise<void>((resolve) => {
         if (!navigator.geolocation) {
@@ -235,61 +228,6 @@ export default defineComponent({
         );
       });
     };
-
-    // const locateUserAndSort = () => {
-    //   return new Promise<void>((resolve) => {
-    //     if (!navigator.geolocation) {
-    //       Notify.create({ type: "warning", message: "Geolocation not supported by browser." });
-    //       return resolve();
-    //     }
-
-    //     isLocating.value = true;
-    //     navigator.geolocation.getCurrentPosition(
-    //       (pos) => {
-    //         const userLngLat: [number, number] = [pos.coords.longitude, pos.coords.latitude];
-    //         userLocation.value = userLngLat;
-
-    //         if (facilities.value?.features) {
-    //           const fromPoint = point(userLngLat);
-
-    //           // Deep clone or map features to create mutable objects
-    //           const updatedFeatures = facilities.value.features.map((facility) => {
-    //             const toPoint = point(facility.geometry.coordinates);
-    //             const distKm = distance(fromPoint, toPoint, { units: "kilometers" });
-
-    //             return {
-    //               ...facility,
-    //               properties: {
-    //                 ...facility.properties,
-    //                 distance: Math.round(distKm * 10) / 10,
-    //               },
-    //             };
-    //           });
-
-    //           // Sort ascending: closest facilities first
-    //           updatedFeatures.sort((a, b) => {
-    //             return (a.properties.distance || 0) - (b.properties.distance || 0);
-    //           });
-
-    //           // Replace the features array with the new sorted array
-    //           facilities.value = {
-    //             ...facilities.value,
-    //             features: updatedFeatures,
-    //           };
-    //         }
-
-    //         isLocating.value = false;
-    //         resolve();
-    //       },
-    //       (error) => {
-    //         console.warn("Geolocation error:", error.message);
-    //         isLocating.value = false;
-    //         resolve(); // Fallback gracefully if permission denied
-    //       },
-    //       { enableHighAccuracy: true, timeout: 8000 },
-    //     );
-    //   });
-    // };
 
     // MAPBOX CORE LOGIC
     const mapboxMap = (data: FacilityGeoJSON) => {
@@ -335,7 +273,7 @@ export default defineComponent({
           type: "line",
           source: "route",
           layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#0d1441", "line-width": 5, "line-opacity": 0.8 },
+          paint: { "line-color": "#10b981", "line-width": 5, "line-opacity": 0.8 },
         });
 
         // Add User Pulse Location Marker if geolocated
@@ -382,7 +320,7 @@ export default defineComponent({
       facilities.value?.features.forEach((facility) => {
         if (facility.properties.id === selectedFacility.value) {
           flyToFacility(facility);
-          // createPopUp(facility);
+          createPopUp(facility, map);
           if (userLocation.value) {
             // void drawRoute(facility.geometry.coordinates);
 
@@ -438,7 +376,7 @@ export default defineComponent({
         el.addEventListener("mouseover", (e) => {
           e.stopPropagation();
           const activeFeature = getActiveFeature();
-          createPopUp(activeFeature);
+          createPopUp(activeFeature, map);
         });
 
         // Remove popup when mouse moves away
@@ -472,30 +410,6 @@ export default defineComponent({
         center: currentFeature.geometry.coordinates,
         zoom: 13,
       });
-    };
-
-    const createPopUp = (currentFeature: FacilityFeature) => {
-      if (!map.value) return;
-
-      // Clear existing popups to prevent duplicates
-      const popUps = document.getElementsByClassName("mapboxgl-popup");
-      if (popUps[0]) popUps[0].remove();
-
-      const distText =
-        currentFeature.properties.distance !== undefined
-          ? `<p style="padding: 4px 10px 0 4px; color: #0d1441; font-weight: bold;">
-          <i class="fas fa-car"></i> ${currentFeature.properties.distance} km away
-         </p>`
-          : "";
-
-      new mapboxgl.Popup({ closeOnClick: false, offset: 10 })
-        .setLngLat(currentFeature.geometry.coordinates)
-        .setHTML(
-          `<h3>${currentFeature.properties.name}</h3>
-       <h4>${currentFeature.properties.address}</h4>
-       ${distText}`,
-        )
-        .addTo(map.value);
     };
 
     onMounted(async () => {
@@ -546,7 +460,6 @@ export default defineComponent({
       isLocating,
       userLocation,
       showFacility,
-      locateUser,
     };
   },
 });
@@ -557,7 +470,7 @@ export default defineComponent({
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  margin-top: 32px;
+  padding-top: 64px;
 
   box-sizing: border-box;
   color: #404040;
@@ -573,15 +486,6 @@ export default defineComponent({
 .info {
   color: #6c757d;
   margin-left: 12px;
-}
-
-.hero-section {
-  background: linear-gradient(135deg, #0d1441 0%, #2233a1 100%);
-  border-radius: 0 0 16px 16px;
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
 }
 
 :deep(.user-location-marker) {

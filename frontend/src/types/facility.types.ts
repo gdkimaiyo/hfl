@@ -21,6 +21,7 @@ export type Property = {
   type: string;
   level: number;
   isPrivate: boolean;
+  isSuggested: boolean;
   phone?: string;
   email?: string;
   mailingAddress?: string;
