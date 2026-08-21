@@ -1,1 +1,68 @@
 // app global css
+/* Marker tweaks */
+.mapboxgl-popup {
+    padding-bottom: 32px;
+    z-index: 20 !important;
+}
+
+.mapboxgl-popup-close-button {
+    display: none;
+}
+
+.mapboxgl-popup-content {
+    font: 400 15px/22px "Source Sans Pro", "Helvetica Neue", sans-serif;
+    padding: 0;
+    /* width: 200px; */
+
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mapboxgl-popup-content h3 {
+    font-size: 18px;
+    background-color: rgba(13, 20, 65, 0.8);
+    height: 50px;
+    color: #fff;
+    margin: 0;
+    padding: 10px;
+    border-radius: 3px 3px 0 0;
+    font-weight: 700;
+    margin-top: -15px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapboxgl-popup-content h4 {
+    font-size: 15px;
+    margin: 0;
+    padding: 10px;
+    font-weight: 400;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapboxgl-popup-content div {
+    padding: 10px;
+}
+
+.mapboxgl-popup-anchor-top>.mapboxgl-popup-content {
+    margin-top: 15px;
+}
+
+.mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
+    border-bottom-color: rgba(13, 20, 65, 0.8);
+}
+
+/* Marker */
+.marker {
+    border: none;
+    cursor: pointer;
+    height: 24px;
+    width: 24px;
+    background-image: url("./src/assets/hospital_icon_24_red.png");
+}

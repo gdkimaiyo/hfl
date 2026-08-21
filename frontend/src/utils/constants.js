@@ -1,3 +1,10 @@
+export const STATS = [
+  { value: "14,000+", label: "Registered health facilities" },
+  { value: "47", label: "Counties covered nationwide" },
+  { value: "Real-time", label: "Route and distance calculation" },
+  { value: "100% Free", label: "Open access care locator" },
+];
+
 export const FACILITIES = {
   type: "FeatureCollection",
   features: [
