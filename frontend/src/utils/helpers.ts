@@ -5,9 +5,21 @@ import type { FacilityFeature } from "../types/facility.types";
 export const createPopUp = (currentFeature: FacilityFeature, mapRef: any) => {
   if (!mapRef.value) return;
 
-  const popUps = document.getElementsByClassName("mapboxgl-popup");
-  if (popUps[0]) {
-    popUps[0].remove();
+  // OLD - It does not target the specific map
+  // const popUps = document.getElementsByClassName("mapboxgl-popup");
+  // if (popUps[0]) {
+  //   popUps[0].remove();
+  // }
+
+  // NEW
+  // Clear/Wipe Existing PopUps in the specific map container before creating another popup
+  const mapContainer = mapRef.value.getContainer();
+  if (mapContainer) {
+    const existingPopups = mapContainer.getElementsByClassName("mapboxgl-popup");
+    if (existingPopups[0]) {
+      existingPopups[0].remove();
+    }
+    // Array.from(existingPopups).forEach((popup: Element) => popup.remove());
   }
 
   // Fallback check for property field names

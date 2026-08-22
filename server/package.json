@@ -23,6 +23,8 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@hapi/joi-date": "^2.0.1",
+    "@turf/distance": "^7.4.0",
+    "@turf/helpers": "^7.4.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",

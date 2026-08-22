@@ -15,6 +15,8 @@ const propertiesSchema = new Schema(
     state: { type: String, required: true },
     type: { type: String, required: true, default: "Hospital" },
     level: { type: Number, required: true, default: 2 },
+    isSuggested: { type: Boolean, required: false, default: false },
+    distance: { type: Number, required: false },
     isPrivate: { type: Boolean, required: true, default: false },
   },
   { _id: false },
@@ -22,7 +24,12 @@ const propertiesSchema = new Schema(
 
 const geometrySchema = new Schema(
   {
-    point: { type: String, enum: ["Point"], required: true, default: "Point" },
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+      default: "Point",
+    },
     coordinates: {
       type: [Number], // [longitude, latitude]
       required: true,
@@ -43,6 +50,8 @@ const facilitySchema = new Schema({
   created: { type: Date, default: Date.now },
   updated: { type: Date },
 });
+
+facilitySchema.index({ geometry: "2dsphere" });
 
 const Facility = mongoose.model("facilities", facilitySchema);
 
