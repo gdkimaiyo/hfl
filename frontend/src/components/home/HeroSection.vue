@@ -20,7 +20,13 @@
             <q-icon name="gps_fixed" size="14px" />
             <span class="q-pl-sm">Facilities Near Me</span>
           </q-btn>
-          <q-btn color="white" class="q-px-lg q-py-sm btn-secondary" rounded outline>
+          <q-btn
+            color="white"
+            class="q-px-lg q-py-sm btn-secondary"
+            rounded
+            outline
+            @click="goTo('about-us')"
+          >
             <span class="q-pr-sm">Learn More</span>
             <q-icon name="fas fa-angles-right" size="14px" />
           </q-btn>
@@ -106,15 +112,13 @@
 import { computed, defineComponent, nextTick, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Notify } from "quasar";
 import { useRouter } from "vue-router";
-import distance from "@turf/distance";
-import { point } from "@turf/helpers";
 import { useQuery } from "@tanstack/vue-query";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "../../secrets.config";
 
 // Services
-import { getFacilities } from "../../services/facility.service";
+import { getSuggestedFacilities } from "../../services/facility.service";
 
 // Types
 import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
@@ -139,19 +143,47 @@ export default defineComponent({
     const userLocation = ref<[number, number] | null>(null);
     const isLocating = ref<boolean>(true);
 
+    // GET DEVICE LOCATION
+    const locateUser = () => {
+      return new Promise<void>((resolve) => {
+        if (!navigator.geolocation) {
+          Notify.create({ type: "warning", message: "Geolocation not supported by browser." });
+          return resolve();
+        }
+
+        isLocating.value = true;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLocation.value = [pos.coords.longitude, pos.coords.latitude];
+            isLocating.value = false;
+            resolve();
+          },
+          (error) => {
+            console.warn("Geolocation warning/error:", error.message);
+            isLocating.value = false;
+            resolve();
+          },
+          { enableHighAccuracy: true, timeout: 8000 },
+        );
+      });
+    };
+
     const {
-      data: rawFacilities,
+      data: suggestedFacilities,
       isLoading,
       refetch,
     } = useQuery<FacilityGeoJSON>({
-      queryKey: ["facilities"],
+      queryKey: ["suggested-facilities"],
       queryFn: async () => {
-        const response = await getFacilities();
+        // Resolve device coordinates first
+        await locateUser();
+
+        // Fetch facilities
+        const response = await getSuggestedFacilities(userLocation.value);
 
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
-        const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
-
-        const features = rawArray || []; // Fallback to empty array if something goes wrong
+        const rawArray = Array.isArray(response.data) ? response.data : response.data?.features;
+        const features = rawArray || [];
 
         // Map property IDs
         const featuresWithIds = features.map((feature: FacilityFeature, index: number) => ({
@@ -170,63 +202,10 @@ export default defineComponent({
           features: featuresWithIds,
         };
       },
-      staleTime: Infinity, // Treat loaded data as fresh forever (no background auto-refetches)
-      gcTime: 30 * 60 * 1000, // Keep inactive data in memory cache for 30 minutes
-      enabled: false, // <-- Crucial: Stops Vue Query from firing automatically on setup
+      staleTime: Infinity,
+      gcTime: 30 * 60 * 1000,
+      enabled: false,
       placeholderData: { type: "FeatureCollection", features: [] },
-    });
-
-    // Reactive list: computes distance dynamically and sorts by nearest
-    const suggestedFacilities = computed<FacilityGeoJSON>(() => {
-      const baseFeatures = rawFacilities.value?.features || [];
-
-      if (!userLocation.value) {
-        return {
-          type: "FeatureCollection",
-          features: baseFeatures,
-        };
-      }
-
-      const userPt = point(userLocation.value);
-
-      const calculatedFeatures = baseFeatures.map((facility) => {
-        const facilityPt = point(facility.geometry.coordinates);
-        const distKm = distance(userPt, facilityPt, { units: "kilometers" });
-
-        return {
-          ...facility,
-          properties: {
-            ...facility.properties,
-            distance: Math.round(distKm * 10) / 10, // Round to 1 decimal place (e.g. 2.4 km)
-          },
-        };
-      });
-
-      // Sort closest to furthest
-      calculatedFeatures.sort(
-        (a, b) => (a.properties.distance ?? Infinity) - (b.properties.distance ?? Infinity),
-      );
-
-      // No user location:
-      // show a stable set of facilities marked as suggested.
-      if (!userLocation.value) {
-        const suggestedPool = (calculatedFeatures || []).filter(
-          (feature) => feature.properties?.isSuggested === true,
-        );
-
-        // Shuffle and pick up to 5 random items
-        const randomFive = [...suggestedPool].sort(() => 0.5 - Math.random()).slice(0, 5);
-
-        return {
-          type: "FeatureCollection",
-          features: randomFive,
-        };
-      }
-
-      return {
-        type: "FeatureCollection",
-        features: calculatedFeatures.slice(0, 5),
-      };
     });
 
     const totalSuggested = computed(() => suggestedFacilities.value?.features?.length || 0);
@@ -256,6 +235,11 @@ export default defineComponent({
       const targetCoords = currentFacility.value.geometry.coordinates;
       flyToFacility(currentFacility.value);
 
+      // if (!userLocation.value) {
+      //   createPopUp(currentFacility.value, map);
+      // }
+      createPopUp(currentFacility.value, map);
+
       if (userLocation.value) {
         // void drawRoute(targetCoords);
         drawRoute(targetCoords).catch((err) => {
@@ -269,6 +253,7 @@ export default defineComponent({
       mapboxgl.accessToken = accessToken.value;
       if (map.value) return;
 
+      // Default center: Nairobi coordinates if user location is unavailable
       const initialCenter = userLocation.value || [36.81868966807952, -1.2860949419582617];
 
       map.value = new mapboxgl.Map({
@@ -325,10 +310,10 @@ export default defineComponent({
         el.id = `marker-${marker.properties.id}`;
         el.className = "marker";
 
-        el.style.width = "24px";
-        el.style.height = "24px";
-        el.style.border = "none";
-        el.style.backgroundImage = "url('./src/assets/hospital_icon_24_red.png')";
+        // el.style.width = "24px";
+        // el.style.height = "24px";
+        // el.style.border = "none";
+        // el.style.backgroundImage = "url('./src/assets/hospital_icon_24_red.png')";
 
         new mapboxgl.Marker(el, { offset: [0, -23] })
           .setLngLat(marker.geometry.coordinates)
@@ -354,10 +339,19 @@ export default defineComponent({
           createPopUp(getActiveFeature(), map);
         });
 
+        // el.addEventListener("mouseleave", () => {
+        //   const popUps = document.getElementsByClassName("mapboxgl-popup");
+        //   if (popUps[0]) {
+        //     popUps[0].remove();
+        //   }
+        // });
+
         el.addEventListener("mouseleave", () => {
-          const popUps = document.getElementsByClassName("mapboxgl-popup");
-          if (popUps[0]) {
-            popUps[0].remove();
+          // Query popups specifically inside the HeroSection map container (#top5mapContainer)
+          const mapContainer = document.getElementById("top5mapContainer");
+          if (mapContainer) {
+            const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
+            Array.from(popUps).forEach((popup) => popup.remove());
           }
         });
       });
@@ -397,34 +391,12 @@ export default defineComponent({
       }
     };
 
-    // GET DEVICE LOCATION & SORT FACILITIES BY TURF DISTANCE
-    const locateUser = () => {
-      return new Promise<void>((resolve) => {
-        if (!navigator.geolocation) {
-          Notify.create({ type: "warning", message: "Geolocation not supported by browser." });
-          return resolve();
-        }
-
-        isLocating.value = true;
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            // Setting this triggers the `facilities` computed property automatically
-            userLocation.value = [pos.coords.longitude, pos.coords.latitude];
-            isLocating.value = false;
-            resolve();
-          },
-          (error) => {
-            console.warn("Geolocation error:", error.message);
-            isLocating.value = false;
-            resolve();
-          },
-          { enableHighAccuracy: true, timeout: 8000 },
-        );
-      });
-    };
-
     const scrollTo = (refName: string): void => {
       void router.push({ name: "home", hash: `#${refName}` });
+    };
+
+    const goTo = (route: string): void => {
+      void router.push(route);
     };
 
     onMounted(async () => {
@@ -434,15 +406,14 @@ export default defineComponent({
 
         // Ensure data came back safely and the DOM container exists
         if (result.data && result.data.features?.length > 0) {
-          await locateUser();
           await nextTick();
           mapboxMap(result.data);
         }
       } catch (error) {
-        console.error(error);
+        console.error("Failed mounting HeroSection:", error);
         Notify.create({
           type: "negative",
-          message: "CONNECTION REFUSED.",
+          message: "Unable to load suggested facilities.",
           group: false,
           timeout: 5000,
         });
@@ -464,6 +435,7 @@ export default defineComponent({
       isLoading,
       isLocating,
       scrollTo,
+      goTo,
     };
   },
 });

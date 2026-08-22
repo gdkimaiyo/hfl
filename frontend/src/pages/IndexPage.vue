@@ -106,7 +106,7 @@ import HeroSection from "../components/home/HeroSection.vue";
 import StatsSection from "../components/home/StatsSection.vue";
 
 // Services
-import { getFacilities } from "../services/facility.service";
+import { getAllFacilities } from "../services/facility.service";
 
 // Types
 import type { FacilityFeature, FacilityGeoJSON } from "../types/facility.types";
@@ -136,9 +136,9 @@ export default defineComponent({
       isLoading,
       refetch,
     } = useQuery<FacilityGeoJSON>({
-      queryKey: ["facilities"],
+      queryKey: ["facilities-near-me"],
       queryFn: async () => {
-        const response = await getFacilities();
+        const response = await getAllFacilities();
 
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
         const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
@@ -380,10 +380,19 @@ export default defineComponent({
         });
 
         // Remove popup when mouse moves away
+        // el.addEventListener("mouseleave", () => {
+        //   const popUps = document.getElementsByClassName("mapboxgl-popup");
+        //   if (popUps[0]) {
+        //     popUps[0].remove();
+        //   }
+        // });
+
         el.addEventListener("mouseleave", () => {
-          const popUps = document.getElementsByClassName("mapboxgl-popup");
-          if (popUps[0]) {
-            popUps[0].remove();
+          // Query popups specifically inside the HeroSection map container (#top5mapContainer)
+          const mapContainer = document.getElementById("mapContainer");
+          if (mapContainer) {
+            const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
+            Array.from(popUps).forEach((popup) => popup.remove());
           }
         });
       });
