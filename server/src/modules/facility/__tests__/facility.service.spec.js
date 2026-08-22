@@ -61,16 +61,14 @@ describe("Facility Service", () => {
 
   describe("Add Facility", () => {
     it("can be created correctly with nested objects", async () => {
-      expect(async () => {
-        await facilityService.addFacility(facilityComplete);
-      }).not.toThrow();
+      await expect(facilityService.addFacility(facilityComplete)).resolves.not.toThrow();
     });
 
-    it("applies default values for point, type, and level", async () => {
+    it("applies default values for geometry.type, properties.type, and level", async () => {
       await facilityService.addFacility(facilityComplete);
       const saved = await facilityModel.findOne({ name: "General Hospital" });
 
-      expect(saved.geometry.point).toBe("Point"); // Default from geometrySchema
+      expect(saved.geometry.type).toBe("Point"); // Default from geometrySchema
       expect(saved.properties.type).toBe("Hospital"); // Default from propertiesSchema
       expect(saved.properties.level).toBe(2);
     });
@@ -94,12 +92,12 @@ describe("Facility Service", () => {
       );
     });
 
-    it("enforces enum for geometry.point", async () => {
-      const invalidPoint = {
+    it("enforces enum for geometry.type", async () => {
+      const invalidType = {
         ...facilityComplete,
-        geometry: { point: "NotAPoint", coordinates: [0, 0] },
+        geometry: { type: "NotAPoint", coordinates: [36.8219, -1.2921] },
       };
-      await expect(facilityService.addFacility(invalidPoint)).rejects.toThrow(mongoose.Error.ValidationError);
+      await expect(facilityService.addFacility(invalidType)).rejects.toThrow(mongoose.Error.ValidationError);
     });
   });
 });
