@@ -17,8 +17,6 @@
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "@tanstack/vue-query": "^5.100.5",
-    "@turf/distance": "^7.4.0",
-    "@turf/helpers": "^7.4.0",
     "axios": "^1.16.1",
     "dotenv": "^16.0.3",
     "mapbox-gl": "^3.24.0",

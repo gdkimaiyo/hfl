@@ -8,9 +8,9 @@ export const getAllFacilities = async () => {
   return response.data;
 };
 
-// // Get suggested facilities
-// // Facilities that are in close proximity to the current visitor/user
-// // If userLocation is null, the API returns ONLY top facilities in Kenya
+// Get suggested facilities
+// Facilities that are in close proximity to the current visitor/user
+// If userLocation is null, the API returns ONLY top facilities in Kenya
 export const getSuggestedFacilities = async (userLocation: Coordinates | null) => {
   const params: Record<string, number> = {};
 
@@ -20,5 +20,22 @@ export const getSuggestedFacilities = async (userLocation: Coordinates | null) =
   }
 
   const response = await axios.get(`${BACKEND_API}/api/v1/facilities/suggested`, { params });
+  return response.data;
+};
+
+// Get suggested facilities
+// Facilities that are in close proximity to the current visitor/user
+// If userLocation is null, the API returns ONLY top facilities in Kenya
+export const getFacilitiesNearMe = async (userLocation: Coordinates | null, distance?: number) => {
+  const params: Record<string, number> = {};
+
+  if (distance) params.distance = distance;
+
+  if (userLocation) {
+    params.longitude = userLocation[0];
+    params.latitude = userLocation[1];
+  }
+
+  const response = await axios.get(`${BACKEND_API}/api/v1/facilities/near-me`, { params });
   return response.data;
 };
