@@ -67,6 +67,29 @@ class FacilityController {
       return ResponseHelper.sendError(res, 500, "Failed to fetch suggested facilities");
     }
   }
+
+  /**
+   * Gets facilities near the user using distance query.
+   * @param {Object} req - The HTTP request object.
+   * @param {Object} res - The HTTP response object.
+   */
+  static async getFacilitiesNearMe(req, res) {
+    try {
+      const { distance, longitude, latitude } = req.query;
+
+      const dist = distance ? parseFloat(distance) : 15;
+      const lng = longitude ? parseFloat(longitude) : null;
+      const lat = latitude ? parseFloat(latitude) : null;
+
+      // Service returns raw facilities array directly
+      const facilities = await facilityService.getFacilitiesNearMe(dist, lng, lat);
+
+      return ResponseHelper.sendResponse(res, 200, "Facilities near me fetched successfully", facilities);
+    } catch (error) {
+      console.error("Error fetching facilities near me:", error);
+      return ResponseHelper.sendError(res, 500, "Failed to fetch facilities near me");
+    }
+  }
 }
 
 export default FacilityController;
