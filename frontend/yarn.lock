@@ -992,33 +992,6 @@
     "@vue/devtools-api" "^6.6.3"
     vue-demi "^0.14.10"
 
-"@turf/distance@^7.4.0":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@turf/distance/-/distance-7.4.0.tgz#7ddbc863f6e510749b60f02780f3c96fb8d2db06"
-  integrity sha512-ODkopQDG1m/U6Mx7OMmShncaCvneomwX3lZY1CDA7x40bhDdTTRYP/n/6LicZVyIO4/oK+aXkov4NOtWYthA2g==
-  dependencies:
-    "@turf/helpers" "7.4.0"
-    "@turf/invariant" "7.4.0"
-    "@types/geojson" "^7946.0.10"
-    tslib "^2.8.1"
-
-"@turf/helpers@7.4.0", "@turf/helpers@^7.4.0":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@turf/helpers/-/helpers-7.4.0.tgz#5589f04812ac95f8985e9396db01d9e70f4a35d5"
-  integrity sha512-7PAwLZqOdRzTI5g9bHvUwlloAXPDH/mlajtryk0tw4ZwGMtmXsAyF4QundsAMfy4u48Fyd3AUqMXY0SMxqJGWg==
-  dependencies:
-    "@types/geojson" "^7946.0.10"
-    tslib "^2.8.1"
-
-"@turf/invariant@7.4.0":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@turf/invariant/-/invariant-7.4.0.tgz#b96eb3a1965cca126fcf15571058d126cc7a32e2"
-  integrity sha512-OAsc3qdNx+tRqzWmMNFMnVlWWACIqnYqIejZKvb2oKkKPYJJrURPXZ6OdrGD58ljJMolLoqwIZGSx3VndaEjxg==
-  dependencies:
-    "@turf/helpers" "7.4.0"
-    "@types/geojson" "^7946.0.10"
-    tslib "^2.8.1"
-
 "@tybys/wasm-util@^0.10.1":
   version "0.10.2"
   resolved "https://registry.yarnpkg.com/@tybys/wasm-util/-/wasm-util-0.10.2.tgz#12b3a1b33db1f9cad4ddff1f604ab7dd00bf464e"
@@ -1110,7 +1083,7 @@
   dependencies:
     "@types/geojson" "*"
 
-"@types/geojson@*", "@types/geojson@^7946.0.10", "@types/geojson@^7946.0.16":
+"@types/geojson@*", "@types/geojson@^7946.0.16":
   version "7946.0.16"
   resolved "https://registry.yarnpkg.com/@types/geojson/-/geojson-7946.0.16.tgz#8ebe53d69efada7044454e3305c19017d97ced2a"
   integrity sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==
