@@ -1,9 +1,14 @@
+<!-- FacilitiesNearMe.vue -->
 <template>
-  <div id="facilities-near-me" ref="#facilities-near-me" class="main-page">
-    <!-- Loading State -->
-    <q-spinner v-if="isLoading || isLocating" color="primary" size="3em" />
+  <div id="facilities-near-me" class="main-page">
+    <!-- Initial Loading State ONLY (First mount) -->
+    <q-spinner v-if="(isLocating && !map) || (isLoading && !map)" color="primary" size="3em" />
 
-    <!-- Error Banner UI -->
+    <!--
+      Error Banner UI
+      TODO 1. Redesign UI
+    -->
+
     <q-banner
       v-else-if="fetchFacilitiesError"
       class="bg-negative text-white q-mb-md rounded-borders"
@@ -18,14 +23,96 @@
     </q-banner>
 
     <div v-else>
-      <div class="row items-center justify-between q-mb-sm">
-        <div class="text-h4 text-bold page-header q-mb-none">Facilities Near Me</div>
-        <q-badge v-if="userLocation" color="positive" class="q-pa-xs">
-          <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your position
-        </q-badge>
+      <div class="text-h4 text-bold page-header q-mb-none">Facilities Near Me</div>
+      <div v-if="userLocation" class="filters q-mx-sm q-my-lg">
+        <!-- Default / All Button -->
+        <!-- <q-btn
+          flat
+          rounded
+          no-caps
+          class="filter-btn"
+          :class="{ selected: selectedFilterRadius === 15 }"
+          label="All (15 km)"
+          @click="showAll"
+        >
+          <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+            <span
+              >{{ selectedFilterRadius === 15 ? "Showing" : "Show" }} facilities within 15 km</span
+            >
+          </q-tooltip>
+        </q-btn> -->
+
+        <!-- Dynamic Radius Buttons -->
+        <q-btn
+          flat
+          rounded
+          no-caps
+          v-for="dist in distance"
+          :key="'filter-radius-' + dist.radius + 'km-' + dist.id"
+          class="filter-btn"
+          :class="{
+            selected: selectedFilterRadius === dist.radius,
+            'is-empty': getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15,
+          }"
+          :label="dist.radius + ' km'"
+          @click="handleRadiusFilter(dist.radius)"
+        >
+          <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+            <!-- Zero facilities warning -->
+            <!-- <div
+            v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15"
+            class="column items-center text-warning"
+            >
+            <span>No facilities within {{ dist.radius }} km</span>
+            <span class="tooltip-badge q-mt-xs bg-warning text-dark">0 Results</span>
+          </div> -->
+
+            <!-- Zero facilities -->
+            <span v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15">
+              No facilities within {{ dist.radius }} km
+            </span>
+
+            <!-- Active state -->
+            <span v-else-if="selectedFilterRadius === dist.radius">
+              Showing facilities within {{ dist.radius }} km
+            </span>
+
+            <!-- In-Memory Filter state (1 - 15 km) -->
+            <span v-else-if="dist.radius <= 15">
+              Show {{ getFacilityCountForRadius(dist.radius) }} facilities within
+              {{ dist.radius }} km
+            </span>
+
+            <!-- Extended API Refetch state (25 km & 50 km) -->
+            <div v-else class="column items-center">
+              <span>Expand search to {{ dist.radius }} km</span>
+              <span class="tooltip-badge q-mt-xs">
+                <q-icon name="sync" size="10px" class="q-mr-xs" />Fetches wider area data
+              </span>
+            </div>
+          </q-tooltip>
+        </q-btn>
+
+        <!-- <q-badge v-if="userLocation" color="primary" class="q-pa-xs q-ma-md">
+          <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your location
+        </q-badge> -->
       </div>
 
-      <div class="info">
+      <div v-else q-mx-sm q-my-lg>
+        <q-banner
+          v-if="!isLocating"
+          dense
+          inline-actions
+          class="bg-amber-1 text-amber-10 q-mb-sm rounded-borders text-caption"
+        >
+          <template #avatar>
+            <q-icon name="location_off" color="amber-9" size="xs" />
+          </template>
+          Location disabled — showing top facilities in Kenya - may not be nearest to you.
+        </q-banner>
+      </div>
+
+      <div class="info q-mx-sm">
         <q-icon name="fas fa-circle-info" size="16px" style="padding-right: 4px" />
         Click on any facility or map marker to draw a route from your location.
       </div>
@@ -34,12 +121,17 @@
       <div class="section">
         <div class="side-content">
           <div class="side-header">
-            <h1>Facilities ({{ facilities?.features?.length || 0 }})</h1>
+            <h1>Facilities ({{ displayedFacilities.length }})</h1>
           </div>
-          <div v-if="isLoading" class="loading-overlay q-pa-md">Loading facilities...</div>
-          <div v-if="!isLoading && facilities" id="listings" class="listings">
+
+          <!-- Show inline overlay indicator during 25km/50km refetching instead of unmounting whole section -->
+          <div v-if="isFetching" class="q-pa-md text-caption text-primary">
+            <q-spinner size="1em" class="q-mr-xs" /> Updating facilities distance boundary...
+          </div>
+
+          <div id="listings" class="listings">
             <div
-              v-for="facility in facilities.features"
+              v-for="facility in displayedFacilities"
               :key="facility.properties.id"
               :id="'listing-' + facility.properties.id"
               class="item"
@@ -108,24 +200,35 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onUnmounted, shallowRef, onMounted, nextTick, watch } from "vue";
+import {
+  defineComponent,
+  ref,
+  computed,
+  onUnmounted,
+  shallowRef,
+  onMounted,
+  nextTick,
+  watch,
+} from "vue";
 import { Notify } from "quasar";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useQuery } from "@tanstack/vue-query";
-import { MAPBOX_TOKEN } from "../../secrets.config";
 // Axios
 import { AxiosError } from "axios";
+
+import { MAPBOX_TOKEN } from "../../secrets.config";
 
 // Services
 import { getFacilitiesNearMe } from "../../services/facility.service";
 
 // Types
-import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
+import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
-// Utils
+// Utils / Constants
 import { createPopUp } from "../../utils/helpers";
+import { DISTANCE } from "../../utils/constants";
 
 export default defineComponent({
   name: "FacilitiesNearMe",
@@ -135,11 +238,16 @@ export default defineComponent({
     const selectedFacility = ref<number | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const map = shallowRef<any>(null);
+    const markersRef = shallowRef<mapboxgl.Marker[]>([]);
     const userLocation = ref<[number, number] | null>(null);
-    // Facilities near-me distance radius. Default is 15km
-    // const distRadius = ref<number | null>(15);
     const isLocating = ref<boolean>(true);
 
+    // API Distance Radius state (Defaults to 15km)
+    const apiQueryRadius = ref<number>(15);
+    // Active UI filter state (Defaults to 1km)
+    const selectedFilterRadius = ref<number>(1);
+
+    const distance = ref<Distance[]>(DISTANCE);
     const hoveredFacilityId = ref<number | null>(null);
 
     // GET DEVICE LOCATION
@@ -167,18 +275,17 @@ export default defineComponent({
       });
     };
 
+    // VUE QUERY - Dependent on apiQueryRadius
     const {
-      data: facilities,
+      data: rawFacilities,
       isLoading,
+      isFetching,
       refetch,
       error: fetchFacilitiesError,
     } = useQuery<FacilityGeoJSON>({
-      queryKey: ["facilities-near-me"],
+      queryKey: ["facilities-near-me", apiQueryRadius],
       queryFn: async () => {
-        // Resolve device coordinates first
-        await locateUser();
-
-        const response = await getFacilitiesNearMe(userLocation.value);
+        const response = await getFacilitiesNearMe(userLocation.value, apiQueryRadius.value);
 
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
         const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
@@ -207,25 +314,99 @@ export default defineComponent({
       placeholderData: { type: "FeatureCollection", features: [] },
     });
 
-    // Extract error messages
-    const getErrorMessage = (err: unknown): string => {
-      if (err instanceof AxiosError) {
-        if (err.code === "ERR_NETWORK" || err.code === "ERR_CONNECTION_REFUSED") {
-          return "Unable to connect to server! Please try again.";
-        }
-        if (err.response?.status === 404) {
-          return "Requested facility endpoint was not found (404).";
-        }
-        if (err.response?.status === 500) {
-          return "Internal server error. Please try again later.";
-        }
-        return err.response?.data?.message || err.message;
+    // COMPUTED IN-MEMORY FILTERED LIST
+    const displayedFacilities = computed<FacilityFeature[]>(() => {
+      const allFeatures = rawFacilities.value?.features || [];
+
+      // Filter in-memory based on selected filter radius
+      return allFeatures.filter((facility) => {
+        if (facility.properties.distance === undefined) return true;
+        return facility.properties.distance <= selectedFilterRadius.value;
+      });
+    });
+
+    // FILTER HANDLERS
+    const showAll = () => {
+      selectedFilterRadius.value = 15;
+      if (apiQueryRadius.value < 15) {
+        apiQueryRadius.value = 15;
+        void refetch();
       }
-      return err instanceof Error ? err.message : "An unexpected error occurred.";
     };
 
-    // MAPBOX CORE LOGIC
-    const mapboxMap = (data: FacilityGeoJSON) => {
+    const handleRadiusFilter = async (radius: number) => {
+      if (getFacilityCountForRadius(radius) === 0) return;
+
+      selectedFilterRadius.value = radius;
+
+      // Fetch wider boundaries if requested radius exceeds current cache threshold
+      if (radius > apiQueryRadius.value) {
+        apiQueryRadius.value = radius;
+
+        try {
+          await refetch();
+        } catch (error) {
+          console.error("Failed to get facilities in the expanded boundary: ", error);
+          Notify.create({
+            type: "negative",
+            message: "Unable to load facilities in the expanded radius",
+            timeout: 5000,
+          });
+        }
+      }
+    };
+
+    // MAP INTERACTION
+    const showFacility = (facilityId: number) => {
+      selectedFacility.value = facilityId;
+
+      const targetFacility = displayedFacilities.value.find(
+        (facility) => facility.properties.id === facilityId,
+      );
+
+      if (!targetFacility) return;
+
+      flyToFacility(targetFacility);
+      createPopUp(targetFacility, map);
+
+      if (userLocation.value) {
+        // void drawRoute(facility.geometry.coordinates);
+        // Alternative
+        drawRoute(targetFacility.geometry.coordinates).catch((err) => {
+          console.error("Failed to fetch route:", err);
+        });
+      }
+    };
+
+    // Triggered when a user hovers over a facility item in the list.
+    // Displays the map popup and focuses the facility without drawing routes.
+    const hoverFacility = (facilityId: number) => {
+      if (hoveredFacilityId.value === facilityId) return;
+
+      hoveredFacilityId.value = facilityId;
+
+      const targetFacility = displayedFacilities.value.find(
+        (facility) => facility.properties.id === facilityId,
+      );
+
+      if (targetFacility) {
+        createPopUp(targetFacility, map);
+        flyToFacility(targetFacility);
+      }
+    };
+
+    //  Clears hover state when mouse leaves the facility item.
+    const clearFacilityHover = () => {
+      hoveredFacilityId.value = null;
+      const mapContainer = document.getElementById("mapContainer");
+      if (mapContainer) {
+        const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
+        Array.from(popUps).forEach((popup) => popup.remove());
+      }
+    };
+
+    // MAPBOX INITIALIZATION
+    const mapboxMap = (data: FacilityFeature[]) => {
       mapboxgl.accessToken = accessToken.value;
 
       /* Assign a unique ID to each facility & sanitize distances */
@@ -245,8 +426,7 @@ export default defineComponent({
         container: "mapContainer",
         style: "mapbox://styles/mapbox/streets-v11",
         center: initialCenter,
-        zoom: 11,
-        // zoom: userLocation.value ? 13 : 12,
+        zoom: userLocation.value ? 13 : 12,
         scrollZoom: true,
       });
 
@@ -282,8 +462,62 @@ export default defineComponent({
         const nav = new mapboxgl.NavigationControl();
         map.value.addControl(nav, "top-right");
 
+        if (userLocation.value) fitMapToVisibleFacilities(data);
         addMarkers(data);
       });
+    };
+
+    // RENDER / RE-RENDER MARKERS ON FILTER CHANGES
+    const addMarkers = (features: FacilityFeature[]) => {
+      if (!map.value) return;
+
+      // Remove active markers from Mapbox map instance & clear array
+      markersRef.value.forEach((marker) => marker.remove());
+      const newMarkers: mapboxgl.Marker[] = [];
+
+      features.forEach((marker) => {
+        const el = document.createElement("div");
+        el.id = `marker-${marker.properties.id}`;
+        el.className = "marker";
+
+        const markerInstance = new mapboxgl.Marker(el, { offset: [0, -23] })
+          .setLngLat(marker.geometry.coordinates)
+          .addTo(map.value);
+
+        // Track new marker instance
+        newMarkers.push(markerInstance);
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          flyToFacility(marker);
+          selectedFacility.value = marker.properties.id ?? null;
+
+          if (userLocation.value) {
+            // void drawRoute(marker.geometry.coordinates);
+
+            // Alternative
+            drawRoute(marker.geometry.coordinates).catch((err) => {
+              console.error("Failed to fetch route:", err);
+            });
+          }
+        });
+
+        el.addEventListener("mouseover", (e) => {
+          e.stopPropagation();
+          createPopUp(marker, map);
+        });
+
+        el.addEventListener("mouseleave", () => {
+          const mapContainer = document.getElementById("mapContainer");
+          if (mapContainer) {
+            const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
+            Array.from(popUps).forEach((popup) => popup.remove());
+          }
+        });
+      });
+
+      // Update reference array
+      markersRef.value = newMarkers;
     };
 
     // FETCH AND DRAW MAPBOX ROUTE LINE
@@ -311,120 +545,6 @@ export default defineComponent({
       }
     };
 
-    const showFacility = (facilityId: number) => {
-      selectedFacility.value = facilityId;
-
-      const targetFacility = facilities.value?.features.find(
-        (facility) => facility.properties.id === facilityId,
-      );
-
-      if (!targetFacility) return;
-
-      flyToFacility(targetFacility);
-      createPopUp(targetFacility, map);
-
-      if (userLocation.value) {
-        // void drawRoute(facility.geometry.coordinates);
-        // Alternative
-        drawRoute(targetFacility.geometry.coordinates).catch((err) => {
-          console.error("Failed to fetch route:", err);
-        });
-      }
-    };
-
-    // Triggered when a user hovers over a facility item in the list.
-    // Displays the map popup and focuses the facility without drawing routes.
-    const hoverFacility = (facilityId: number) => {
-      // Prevent redundant triggers if already hovering the same facility
-      if (hoveredFacilityId.value === facilityId) return;
-
-      hoveredFacilityId.value = facilityId;
-
-      const targetFacility = facilities.value?.features.find(
-        (facility) => facility.properties.id === facilityId,
-      );
-
-      if (targetFacility) {
-        createPopUp(targetFacility, map);
-        flyToFacility(targetFacility);
-      }
-    };
-
-    //  Clears hover state when mouse leaves the facility item.
-    const clearFacilityHover = () => {
-      hoveredFacilityId.value = null;
-      const mapContainer = document.getElementById("mapContainer");
-      if (mapContainer) {
-        const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
-        Array.from(popUps).forEach((popup) => popup.remove());
-      }
-    };
-
-    const addMarkers = (data: FacilityGeoJSON) => {
-      if (!map.value) return;
-
-      data.features.forEach((marker) => {
-        const el = document.createElement("div");
-        el.id = `marker-${marker.properties.id}`;
-        el.className = "marker";
-
-        new mapboxgl.Marker(el, { offset: [0, -23] })
-          .setLngLat(marker.geometry.coordinates)
-          .addTo(map.value);
-
-        // Get feature with updated distance from computed facilities
-        const getActiveFeature = (): FacilityFeature => {
-          const found = facilities.value?.features.find(
-            (f) => f.properties.id === marker.properties.id,
-          );
-          return found || marker;
-        };
-
-        // Center map, draw route, and highlight selection (NO POPUP)
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const activeFeature = getActiveFeature();
-
-          flyToFacility(activeFeature);
-          // createPopUp(activeFeature);
-          selectedFacility.value = activeFeature.properties.id ?? null;
-
-          if (userLocation.value) {
-            // void drawRoute(activeFeature.geometry.coordinates);
-
-            // Alternative
-            drawRoute(activeFeature.geometry.coordinates).catch((err) => {
-              console.error("Failed to fetch route:", err);
-            });
-          }
-        });
-
-        // Show popup with facility distance ONLY on hover
-        el.addEventListener("mouseover", (e) => {
-          e.stopPropagation();
-          const activeFeature = getActiveFeature();
-          createPopUp(activeFeature, map);
-        });
-
-        // Remove popup when mouse moves away
-        // el.addEventListener("mouseleave", () => {
-        //   const popUps = document.getElementsByClassName("mapboxgl-popup");
-        //   if (popUps[0]) {
-        //     popUps[0].remove();
-        //   }
-        // });
-
-        el.addEventListener("mouseleave", () => {
-          // Query popups specifically inside the HeroSection map container (#top5mapContainer)
-          const mapContainer = document.getElementById("mapContainer");
-          if (mapContainer) {
-            const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
-            Array.from(popUps).forEach((popup) => popup.remove());
-          }
-        });
-      });
-    };
-
     // const onMapClick = (event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
     //   if (!map.value) return;
 
@@ -448,28 +568,55 @@ export default defineComponent({
       });
     };
 
-    onMounted(async () => {
-      try {
-        // Force the API to fetch data and wait for it to finish completely
-        const result = await refetch();
+    // Fit map viewport around all currently rendered/displayed facilities
+    const fitMapToVisibleFacilities = (features: FacilityFeature[]) => {
+      if (!map.value || features.length === 0) return;
 
-        // Ensure data came back safely and the DOM container exists
-        if (result.data && result.data.features?.length > 0) {
-          await nextTick();
-          mapboxMap(result.data);
-        }
-      } catch (error) {
-        console.error("Failed mounting HeroSection:", error);
-        Notify.create({
-          type: "negative",
-          message: "Unable to load facilities near me.",
-          group: false,
-          timeout: 5000,
-        });
+      const bounds = new mapboxgl.LngLatBounds();
+
+      // Always include user location in bounds calculation if present
+      if (userLocation.value) {
+        bounds.extend(userLocation.value);
       }
-    });
 
-    // REACTIVE MOUNT LIFECYCLE
+      // Extend bounds to encompass every visible facility marker
+      features.forEach((facility) => {
+        bounds.extend(facility.geometry.coordinates);
+      });
+
+      map.value.fitBounds(bounds, {
+        padding: { top: 70, bottom: 70, left: 70, right: 70 },
+        maxZoom: 14, // Prevents over-zooming when only 1 facility exists close to user
+        duration: 1000, // Smooth 1-second transition animation
+      });
+    };
+
+    // HELPER FUNCTIONS
+    const getFacilityCountForRadius = (radius: number): number => {
+      const allFeatures = rawFacilities.value?.features || [];
+      return allFeatures.filter((facility) => {
+        if (facility.properties.distance === undefined) return false;
+        return facility.properties.distance <= radius;
+      }).length;
+    };
+
+    const getErrorMessage = (err: unknown): string => {
+      if (err instanceof AxiosError) {
+        if (err.code === "ERR_NETWORK" || err.code === "ERR_CONNECTION_REFUSED") {
+          return "Unable to connect to server! Please try again.";
+        }
+        if (err.response?.status === 404) {
+          return "Requested facility endpoint was not found (404).";
+        }
+        if (err.response?.status === 500) {
+          return "Internal server error. Please try again later.";
+        }
+        return err.response?.data?.message || err.message;
+      }
+      return err instanceof Error ? err.message : "An unexpected error occurred.";
+    };
+
+    // WATCHERS & LIFECYCLE
     // Replaces mounted(). Wait until both Vue Query has the facilities data
     // AND the DOM container element reference is populated before loading the map.
     // watch(
@@ -481,6 +628,12 @@ export default defineComponent({
     //   },
     //   { immediate: true },
     // );
+    watch(displayedFacilities, (newFeatures) => {
+      if (map.value) {
+        addMarkers(newFeatures);
+        if (userLocation.value) fitMapToVisibleFacilities(newFeatures);
+      }
+    });
 
     watch(fetchFacilitiesError, (newError) => {
       if (newError) {
@@ -496,7 +649,51 @@ export default defineComponent({
       }
     });
 
-    // Memory safety cleanup
+    onMounted(async () => {
+      await locateUser();
+
+      try {
+        let result = await refetch();
+
+        const widerRadii = distance.value
+          .map((d) => d.radius)
+          .filter((r) => r > apiQueryRadius.value)
+          .sort((a, b) => a - b);
+
+        let i = 0;
+        while ((!result.data || result.data.features.length === 0) && i < widerRadii.length) {
+          apiQueryRadius.value = widerRadii[i] || 15;
+          result = await refetch();
+          i++;
+        }
+
+        if (result.data && result.data.features.length > 0) {
+          const distances = result.data.features
+            .map((f) => f.properties.distance)
+            .filter((d): d is number => d !== undefined);
+
+          if (distances.length > 0) {
+            const minDistance = Math.min(...distances);
+            const effectiveFilter = distance.value.find((d) => d.radius >= minDistance);
+            if (effectiveFilter) {
+              selectedFilterRadius.value = effectiveFilter.radius;
+            }
+          }
+
+          await nextTick();
+          mapboxMap(displayedFacilities.value);
+        }
+      } catch (error) {
+        console.error("Failed mounting FacilitiesNearMe:", error);
+        Notify.create({
+          type: "negative",
+          message: "Unable to load facilities near me.",
+          group: false,
+          timeout: 5000,
+        });
+      }
+    });
+
     onUnmounted(() => {
       map.value?.remove();
     });
@@ -504,8 +701,10 @@ export default defineComponent({
     return {
       accessToken,
       selectedFacility,
-      facilities,
+      displayedFacilities,
+      map,
       isLoading,
+      isFetching,
       isLocating,
       userLocation,
       showFacility,
@@ -514,6 +713,11 @@ export default defineComponent({
       refetch,
       getErrorMessage,
       fetchFacilitiesError,
+      selectedFilterRadius,
+      distance,
+      showAll,
+      getFacilityCountForRadius,
+      handleRadiusFilter,
     };
   },
 });
@@ -535,11 +739,10 @@ export default defineComponent({
   -webkit-font-smoothing: antialiased;
 }
 .page-header {
-  margin: 0 0 24px 12px;
+  margin: 0 0 12px 12px;
 }
 .info {
   color: #6c757d;
-  margin-left: 12px;
 }
 
 :deep(.user-location-marker) {
@@ -675,6 +878,96 @@ a:hover {
   color: #6c757d;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Filter Button Base Styles */
+.filter-btn {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  color: var(--q-primary, #0d1441);
+  background-color: #f8fafc;
+  /* Variant of #0d1441 (18% opacity border) */
+  border: 1px solid rgba(13, 20, 65, 0.18);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+  &:hover {
+    background-color: #f1f5f9;
+    color: var(--q-primary, #0d1441);
+    /* Border darkens to 40% opacity variant on hover */
+    border-color: rgba(13, 20, 65, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(13, 20, 65, 0.08);
+  }
+
+  /* Active / Selected State */
+  &.selected {
+    background-color: var(--q-primary, #0d1441);
+    color: #ffffff;
+    border-color: var(--q-primary, #0d1441);
+    box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
+
+    &:hover {
+      background-color: var(--q-primary, #0d1441);
+      color: #ffffff;
+      border-color: var(--q-primary, #0d1441);
+      opacity: 0.95;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Muted / Zero Results State */
+  &.is-empty:not(.selected) {
+    opacity: 0.55;
+    background-color: #f1f5f9;
+    border-style: dashed;
+    border-color: rgba(13, 20, 65, 0.15);
+
+    &:hover {
+      opacity: 0.85;
+      border-style: solid;
+    }
+  }
+}
+
+/* Custom Tooltip Styling */
+.filter-tooltip {
+  background-color: rgba(13, 20, 65, 0.94) !important;
+  backdrop-filter: blur(4px);
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+
+  /* Refetch indicator pill inside tooltip */
+  .tooltip-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff; /* Soft blue highlight */
+    // color: #93c5fd; /* Soft blue highlight */
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+}
+
 .email {
   color: #2233a1;
   text-decoration: none;
@@ -684,10 +977,6 @@ a:hover {
 }
 
 @media only screen and (max-width: 600px) {
-  .page-header,
-  .info {
-    margin: 0;
-  }
   .section {
     flex-direction: column;
     text-align: center;
