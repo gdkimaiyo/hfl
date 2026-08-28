@@ -33,3 +33,8 @@ export type FacilityGeoJSON = {
   type: "FeatureCollection";
   features: FacilityFeature[];
 };
+
+export type Distance = {
+  id: string;
+  radius: number;
+};

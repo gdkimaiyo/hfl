@@ -5,6 +5,16 @@ export const STATS = [
   { value: "100% Free", label: "Open access care locator" },
 ];
 
+export const DISTANCE = [
+  { id: "1", radius: 1 },
+  { id: "2", radius: 3 },
+  { id: "3", radius: 5 },
+  { id: "4", radius: 10 },
+  { id: "5", radius: 15 },
+  { id: "6", radius: 25 },
+  { id: "7", radius: 50 },
+];
+
 export const FACILITIES = {
   type: "FeatureCollection",
   features: [
