@@ -45,3 +45,7 @@ export const createPopUp = (currentFeature: FacilityFeature, mapRef: any) => {
     )
     .addTo(mapRef.value);
 };
+
+export const isHandset = () => {
+  return screen.width <= 575 ? true : false;
+};

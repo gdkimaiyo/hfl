@@ -1,8 +1,13 @@
 <!-- FacilitiesNearMe.vue -->
 <template>
-  <div id="facilities-near-me" class="main-page">
+  <div id="facilities-near-me" ref="#facilities-near-me" class="main-page">
     <!-- Initial Loading State ONLY (First mount) -->
-    <q-spinner v-if="(isLocating && !map) || (isLoading && !map)" color="primary" size="3em" />
+    <div
+      v-if="(isLocating && !map) || (isLoading && !map)"
+      class="flex flex-center loader-container"
+    >
+      <q-spinner color="primary" size="3em" />
+    </div>
 
     <!--
       Error Banner UI
@@ -22,111 +27,194 @@
       </template>
     </q-banner>
 
-    <div v-else>
-      <div class="text-h4 text-bold page-header q-mb-none">Facilities Near Me</div>
-      <div v-if="userLocation" class="filters q-mx-sm q-my-lg">
-        <!-- Default / All Button -->
-        <!-- <q-btn
-          flat
-          rounded
-          no-caps
-          class="filter-btn"
-          :class="{ selected: selectedFilterRadius === 15 }"
-          label="All (15 km)"
-          @click="showAll"
-        >
-          <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-            <span
-              >{{ selectedFilterRadius === 15 ? "Showing" : "Show" }} facilities within 15 km</span
-            >
-          </q-tooltip>
-        </q-btn> -->
+    <div v-else id="map-section" ref="#map-section">
+      <header class="top-header-section q-mb-md">
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">Facilities Near Me</div>
 
-        <!-- Dynamic Radius Buttons -->
-        <q-btn
-          flat
-          rounded
-          no-caps
-          v-for="dist in distance"
-          :key="'filter-radius-' + dist.radius + 'km-' + dist.id"
-          class="filter-btn"
-          :class="{
-            selected: selectedFilterRadius === dist.radius,
-            'is-empty': getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15,
-          }"
-          :label="dist.radius + ' km'"
-          @click="handleRadiusFilter(dist.radius)"
-        >
-          <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-            <!-- Zero facilities warning -->
-            <!-- <div
-            v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15"
-            class="column items-center text-warning"
-            >
-            <span>No facilities within {{ dist.radius }} km</span>
-            <span class="tooltip-badge q-mt-xs bg-warning text-dark">0 Results</span>
-          </div> -->
+        <!-- Filters Bar -->
+        <div v-if="userLocation" class="filters q-py-sm">
+          <!-- Default / All Button -->
+          <!-- <q-btn
+            flat
+            rounded
+            no-caps
+            class="filter-btn"
+            :class="{ selected: selectedFilterRadius === 15 }"
+            label="All (15 km)"
+            @click="showAll"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              <span
+                >{{ selectedFilterRadius === 15 ? "Showing" : "Show" }} facilities within 15
+                km</span
+              >
+            </q-tooltip>
+          </q-btn> -->
 
-            <!-- Zero facilities -->
-            <span v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15">
-              No facilities within {{ dist.radius }} km
-            </span>
-
-            <!-- Active state -->
-            <span v-else-if="selectedFilterRadius === dist.radius">
-              Showing facilities within {{ dist.radius }} km
-            </span>
-
-            <!-- In-Memory Filter state (1 - 15 km) -->
-            <span v-else-if="dist.radius <= 15">
-              Show {{ getFacilityCountForRadius(dist.radius) }} facilities within
-              {{ dist.radius }} km
-            </span>
-
-            <!-- Extended API Refetch state (25 km & 50 km) -->
-            <div v-else class="column items-center">
-              <span>Expand search to {{ dist.radius }} km</span>
-              <span class="tooltip-badge q-mt-xs">
-                <q-icon name="sync" size="10px" class="q-mr-xs" />Fetches wider area data
+          <!-- Dynamic Radius Buttons -->
+          <q-btn
+            flat
+            rounded
+            no-caps
+            v-for="dist in distance"
+            :key="'filter-radius-' + dist.radius + 'km-' + dist.id"
+            class="filter-btn"
+            :class="{
+              selected: selectedFilterRadius === dist.radius,
+              'is-empty': getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15,
+            }"
+            :label="dist.radius + ' km'"
+            @click="handleRadiusFilter(dist.radius)"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              <span v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15">
+                No facilities within {{ dist.radius }} km
               </span>
-            </div>
-          </q-tooltip>
-        </q-btn>
+              <span v-else-if="selectedFilterRadius === dist.radius">
+                Showing facilities within {{ dist.radius }} km
+              </span>
+              <span v-else-if="dist.radius <= 15">
+                Show {{ getFacilityCountForRadius(dist.radius) }} facilities within
+                {{ dist.radius }} km
+              </span>
+              <div v-else class="column items-center">
+                <span>Expand search to {{ dist.radius }} km</span>
+                <span class="tooltip-badge q-mt-xs">
+                  <q-icon name="sync" size="10px" class="q-mr-xs" />Fetches wider area data
+                </span>
+              </div>
+            </q-tooltip>
+          </q-btn>
 
-        <!-- <q-badge v-if="userLocation" color="primary" class="q-pa-xs q-ma-md">
-          <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your location
-        </q-badge> -->
-      </div>
+          <q-separator vertical class="q-mx-xs" />
 
-      <div v-else q-mx-sm q-my-lg>
-        <q-banner
-          v-if="!isLocating"
-          dense
-          inline-actions
-          class="bg-amber-1 text-amber-10 q-mb-sm rounded-borders text-caption"
-        >
-          <template #avatar>
-            <q-icon name="location_off" color="amber-9" size="xs" />
-          </template>
-          Location disabled — showing top facilities in Kenya - may not be nearest to you.
-        </q-banner>
-      </div>
+          <!-- Ownership Filters -->
+          <q-btn
+            flat
+            rounded
+            no-caps
+            class="filter-btn"
+            :class="{ selected: selectedOwnership === 'public' }"
+            label="Public"
+            @click="handleOwnershipFilter('public')"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
+            </q-tooltip>
+            <q-icon
+              name="close"
+              size="14px"
+              class="q-ml-xs"
+              @click.stop="handleOwnershipFilter('both')"
+              v-if="selectedOwnership === 'public'"
+            />
+          </q-btn>
 
-      <div class="info q-mx-sm">
-        <q-icon name="fas fa-circle-info" size="16px" style="padding-right: 4px" />
-        Click on any facility or map marker to draw a route from your location.
-      </div>
-      <q-separator spaced />
+          <q-btn
+            flat
+            rounded
+            no-caps
+            class="filter-btn"
+            :class="{ selected: selectedOwnership === 'private' }"
+            label="Private"
+            @click="handleOwnershipFilter('private')"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
+            </q-tooltip>
+            <q-icon
+              name="close"
+              size="14px"
+              class="q-ml-xs"
+              @click.stop="handleOwnershipFilter('both')"
+              v-if="selectedOwnership === 'private'"
+            />
+          </q-btn>
 
-      <div class="section">
-        <div class="side-content">
-          <div class="side-header">
+          <q-separator vertical class="q-mx-xs" />
+
+          <!-- Facility Type Filters -->
+          <q-btn
+            flat
+            rounded
+            no-caps
+            class="filter-btn"
+            :class="{ selected: selectedHospitalType === 'hospital' }"
+            label="Hospital"
+            @click="handleHospitalTypeFilter('hospital')"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
+            </q-tooltip>
+            <q-icon
+              name="close"
+              size="14px"
+              class="q-ml-xs"
+              @click.stop="handleHospitalTypeFilter('')"
+              v-if="selectedHospitalType === 'hospital'"
+            />
+          </q-btn>
+
+          <q-btn
+            flat
+            rounded
+            no-caps
+            class="filter-btn"
+            :class="{ selected: selectedHospitalType === 'health-centre' }"
+            label="Health Centre"
+            @click="handleHospitalTypeFilter('health-centre')"
+          >
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
+            </q-tooltip>
+            <q-icon
+              name="close"
+              size="14px"
+              class="q-ml-xs"
+              @click.stop="handleHospitalTypeFilter('')"
+              v-if="selectedHospitalType === 'health-centre'"
+            />
+          </q-btn>
+
+          <!-- <q-badge v-if="userLocation" color="primary" class="q-pa-xs q-ma-md">
+            <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your location
+          </q-badge> -->
+        </div>
+
+        <div v-else class="q-py-sm">
+          <q-banner
+            v-if="!isLocating"
+            dense
+            inline-actions
+            class="bg-amber-1 text-amber-10 rounded-borders text-caption"
+          >
+            <template #avatar>
+              <q-icon name="location_off" color="amber-9" size="xs" />
+            </template>
+            Location disabled — showing top facilities in Kenya.
+          </q-banner>
+        </div>
+
+        <!-- Helpful Tip Bar -->
+        <div class="info text-caption text-grey-7 flex items-center q-mt-xs">
+          <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
+          Click on any facility card or map marker to draw a driving route.
+        </div>
+      </header>
+
+      <!-- <q-separator spaced /> -->
+      <q-separator class="q-mb-md" />
+
+      <main class="section">
+        <aside class="side-content">
+          <!-- <div class="side-header">
             <h1>Facilities ({{ displayedFacilities.length }})</h1>
-          </div>
-
-          <!-- Show inline overlay indicator during 25km/50km refetching instead of unmounting whole section -->
-          <div v-if="isFetching" class="q-pa-md text-caption text-primary">
-            <q-spinner size="1em" class="q-mr-xs" /> Updating facilities distance boundary...
+          </div> -->
+          <div
+            v-if="isFetching"
+            class="q-pa-xs text-caption text-primary flex items-center bg-blue-1 rounded-borders"
+          >
+            <q-spinner size="1em" class="q-mr-xs" /> Updating distance boundary...
           </div>
 
           <div id="listings" class="listings">
@@ -135,66 +223,112 @@
               :key="facility.properties.id"
               :id="'listing-' + facility.properties.id"
               class="item"
-              :class="{ active: selectedFacility === facility.properties.id }"
+              :class="{ 'is-selected': selectedFacility === facility.properties.id }"
               @click="showFacility(facility.properties.id ?? 0)"
-              @mouseenter="hoverFacility(facility.properties.id ?? 0)"
-              @mouseleave="clearFacilityHover"
             >
-              <div
-                :id="'link-' + facility.properties.id"
-                class="title"
-                :class="{ active: selectedFacility === facility.properties.id }"
-              >
-                {{ facility.properties.name }}
-              </div>
-              <div>
-                <span>{{ facility.properties.address }}</span>
-                <q-icon name="fas fa-circle" size="3px" style="padding: 0 6px" />
-                <span v-if="facility.properties.isPrivate" class="muted">Private</span>
-                <span v-else class="muted">Public</span>
-                <q-icon name="fas fa-circle" size="3px" style="padding: 0 6px" />
-                <span v-if="facility.properties.type === 'Hospital'" class="muted">Hospital</span>
-                <span v-else class="muted">Health Centre</span>
-              </div>
-              <div v-if="facility.properties.phone || facility.properties.email">
-                <span v-if="facility.properties.phone">
-                  <q-icon
-                    name="fas fa-phone"
-                    class="muted"
-                    size="12px"
-                    style="padding-right: 2px"
-                  />
-                  {{ facility.properties.phone }}
-                </span>
-                <q-icon
-                  name="fas fa-circle"
-                  size="3px"
-                  style="padding: 0 8px"
-                  v-if="facility.properties.phone && facility.properties.email"
-                />
-                <a
-                  :href="`mailto:${facility.properties.email}`"
-                  class="email"
-                  v-if="facility.properties.email"
-                  @click.stop
+              <div class="image-wrapper">
+                <q-img
+                  alt="Facility Image"
+                  src="../../assets/facilities/mtrh-2.jpg"
+                  height="160px"
+                  class="rounded-borders facility-img"
+                  fit="cover"
                 >
-                  {{ facility.properties.email }}
-                </a>
+                  <template #loading>
+                    <q-spinner color="primary" size="20px" />
+                  </template>
+                </q-img>
               </div>
-              <div
-                class="text-primary text-bold q-mt-xs"
-                v-if="facility.properties.distance !== undefined"
-              >
-                <q-icon name="directions_car" size="14px" />
-                {{ facility.properties.distance }} km away
+
+              <div class="after-img-content">
+                <div
+                  :id="'link-' + facility.properties.id"
+                  class="title text-subtitle1 text-bold"
+                  :class="{ active: selectedFacility === facility.properties.id }"
+                  @mouseenter="hoverFacility(facility.properties.id ?? 0)"
+                  @mouseleave="clearFacilityHover"
+                >
+                  {{ facility.properties.name }}
+                </div>
+
+                <div
+                  v-if="facility.properties.address"
+                  class="text-caption text-grey-7 q-mb-xs flex items-center"
+                >
+                  <q-icon name="place" size="13px" class="q-mr-xs" />
+                  {{ facility.properties.address }}
+                </div>
+
+                <!-- Contact Information -->
+                <div
+                  v-if="facility.properties.phone || facility.properties.email"
+                  class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
+                >
+                  <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
+                    <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
+                    {{ facility.properties.phone.split("/")[0] }}
+                  </span>
+                  <span
+                    v-if="facility.properties.phone && facility.properties.email"
+                    class="text-grey-4 q-mx-sm"
+                    >•</span
+                  >
+                  <span v-if="facility.properties.email" class="flex items-center">
+                    <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
+                    <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
+                      {{ facility.properties.email }}
+                    </a>
+                  </span>
+                </div>
+
+                <!-- Facility Badges -->
+                <div class="row q-gutter-xs q-mt-xs">
+                  <q-badge
+                    unelevated
+                    :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
+                    :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
+                    class="text-caption text-weight-medium"
+                  >
+                    {{ facility.properties.isPrivate ? "Private" : "Public" }}
+                  </q-badge>
+                  <q-badge outline color="primary" class="text-caption text-weight-medium">
+                    {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
+                  </q-badge>
+                </div>
+
+                <!-- Distance and Actions Footer -->
+                <div
+                  class="row items-center justify-between text-primary text-bold q-mt-md pt-xs"
+                  v-if="facility.properties.distance !== undefined"
+                >
+                  <div class="flex items-center text-caption text-weight-bold">
+                    <q-icon name="directions_car" size="14px" class="q-mr-xs" />
+                    {{ facility.properties.distance }} km away
+                  </div>
+                  <div class="q-mb-md">
+                    <q-btn
+                      flat
+                      rounded
+                      no-caps
+                      class="facility-card-action-btn"
+                      size="sm"
+                      @click.stop
+                    >
+                      Services
+                      <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
+                    </q-btn>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="map-locations">
+        </aside>
+
+        <!-- RIGHT CONTENT: Sticky Map -->
+        <section class="map-locations">
           <div id="mapContainer" class="basemap"></div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   </div>
 </template>
@@ -211,6 +345,7 @@ import {
   watch,
 } from "vue";
 import { Notify } from "quasar";
+import { useRouter } from "vue-router";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useQuery } from "@tanstack/vue-query";
@@ -227,7 +362,7 @@ import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/fac
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
 // Utils / Constants
-import { createPopUp } from "../../utils/helpers";
+import { createPopUp, isHandset } from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
 export default defineComponent({
@@ -242,10 +377,17 @@ export default defineComponent({
     const userLocation = ref<[number, number] | null>(null);
     const isLocating = ref<boolean>(true);
 
+    const router = useRouter();
+
     // API Distance Radius state (Defaults to 15km)
     const apiQueryRadius = ref<number>(15);
     // Active UI filter state (Defaults to 1km)
     const selectedFilterRadius = ref<number>(1);
+
+    // Public or Private
+    const selectedOwnership = ref<string>("both");
+    // Hospital Type
+    const selectedHospitalType = ref<string>("");
 
     const distance = ref<Distance[]>(DISTANCE);
     const hoveredFacilityId = ref<number | null>(null);
@@ -318,10 +460,26 @@ export default defineComponent({
     const displayedFacilities = computed<FacilityFeature[]>(() => {
       const allFeatures = rawFacilities.value?.features || [];
 
-      // Filter in-memory based on selected filter radius
       return allFeatures.filter((facility) => {
-        if (facility.properties.distance === undefined) return true;
-        return facility.properties.distance <= selectedFilterRadius.value;
+        const props = facility.properties;
+
+        // Distance Radius Filter
+        const matchesDistance =
+          props.distance === undefined || props.distance <= selectedFilterRadius.value;
+
+        // Ownership Filter ('both', 'public', or 'private')
+        const matchesOwnership =
+          selectedOwnership.value === "both" ||
+          (selectedOwnership.value === "private" && props.isPrivate === true) ||
+          (selectedOwnership.value === "public" && props.isPrivate === false);
+
+        // Facility Type Filter ('', 'hospital', or 'health-centre')
+        const matchesHospitalType = computedHospitalTypeMatch(
+          props.type,
+          selectedHospitalType.value,
+        );
+
+        return matchesDistance && matchesOwnership && matchesHospitalType;
       });
     });
 
@@ -356,8 +514,19 @@ export default defineComponent({
       }
     };
 
+    const handleOwnershipFilter = (filter: string) => {
+      selectedOwnership.value = filter;
+    };
+
+    const handleHospitalTypeFilter = (filter: string) => {
+      selectedHospitalType.value = filter;
+    };
+
     // MAP INTERACTION
     const showFacility = (facilityId: number) => {
+      if (isHandset()) {
+        void router.push({ name: "home", hash: "#map-section" });
+      }
       selectedFacility.value = facilityId;
 
       const targetFacility = displayedFacilities.value.find(
@@ -427,7 +596,7 @@ export default defineComponent({
         style: "mapbox://styles/mapbox/streets-v11",
         center: initialCenter,
         zoom: userLocation.value ? 13 : 12,
-        scrollZoom: true,
+        scrollZoom: false,
       });
 
       map.value.on("load", () => {
@@ -594,10 +763,34 @@ export default defineComponent({
     // HELPER FUNCTIONS
     const getFacilityCountForRadius = (radius: number): number => {
       const allFeatures = rawFacilities.value?.features || [];
+
       return allFeatures.filter((facility) => {
-        if (facility.properties.distance === undefined) return false;
-        return facility.properties.distance <= radius;
+        const props = facility.properties;
+
+        const matchesRadius = props.distance !== undefined && props.distance <= radius;
+        const matchesOwnership =
+          selectedOwnership.value === "both" ||
+          (selectedOwnership.value === "private" && props.isPrivate === true) ||
+          (selectedOwnership.value === "public" && props.isPrivate === false);
+        const matchesHospitalType = computedHospitalTypeMatch(
+          props.type,
+          selectedHospitalType.value,
+        );
+
+        return matchesRadius && matchesOwnership && matchesHospitalType;
       }).length;
+    };
+
+    const computedHospitalTypeMatch = (
+      facilityType: string | undefined,
+      selectedType: string,
+    ): boolean => {
+      if (!selectedType) return true;
+
+      const normalizedFacilityType = (facilityType || "").toLowerCase().replace(/[\s-_]/g, "");
+      const normalizedSelectedType = selectedType.toLowerCase().replace(/[\s-_]/g, "");
+
+      return normalizedFacilityType.includes(normalizedSelectedType);
     };
 
     const getErrorMessage = (err: unknown): string => {
@@ -714,10 +907,14 @@ export default defineComponent({
       getErrorMessage,
       fetchFacilitiesError,
       selectedFilterRadius,
+      selectedOwnership,
+      selectedHospitalType,
       distance,
       showAll,
       getFacilityCountForRadius,
       handleRadiusFilter,
+      handleOwnershipFilter,
+      handleHospitalTypeFilter,
     };
   },
 });
@@ -728,6 +925,7 @@ export default defineComponent({
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 24px 16px;
   padding-top: 64px;
 
   box-sizing: border-box;
@@ -738,11 +936,17 @@ export default defineComponent({
     sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+.loader-container {
+  min-height: 50vh;
+}
+
 .page-header {
-  margin: 0 0 12px 12px;
+  // margin: 0 0 12px 12px;
+  line-height: 1.2;
 }
 .info {
-  color: #6c757d;
+  // color: #6c757d;
+  font-size: 13px;
 }
 
 :deep(.user-location-marker) {
@@ -770,21 +974,19 @@ export default defineComponent({
 .section {
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
+  gap: 20px;
+  height: calc(100vh - 270px);
+  min-height: 500px;
 }
 
 .side-content {
-  width: 33.3333%;
-  max-width: 33.3333%;
-  height: 75vh;
-  // margin-right: 24px;
-  align-content: center;
-  flex-grow: 1;
-
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
-  border-right: 1px solid rgba(0, 0, 0, 0.25);
 }
+
 .side-header {
   background: #fff;
   border-bottom: 1px solid #eee;
@@ -811,62 +1013,115 @@ a:hover {
 }
 
 .listings {
-  height: 100%;
-  overflow: auto;
-  overflow-y: scroll;
-  padding-bottom: 60px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .listings .item {
-  border-bottom: 1px solid #eee;
-  padding: 10px;
-  text-decoration: none;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  // border-radius: 12px;
+  padding: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+
+  &:hover {
+    // border-color: var(--q-primary, #0d1441);
+    // box-shadow: 0 4px 16px rgba(13, 20, 65, 0.08);
+    transform: translateY(-2px);
+
+    .title {
+      // color: var(--q-primary, #0d1441);
+      color: rgba(13, 20, 65, 0.7);
+    }
+  }
+
+  // &.is-selected {
+  //   border: 2px solid var(--q-primary, #0d1441);
+  //   box-shadow: 0 6px 20px rgba(13, 20, 65, 0.12);
+  // }
 }
 
-.listings .item:last-child {
-  border-bottom: none;
+.facility-img {
+  transition: transform 0.3s ease;
+}
+
+.item:hover .facility-img {
+  transform: scale(1.01);
+}
+
+.after-img-content {
+  padding-top: 12px;
 }
 
 .listings .item .title {
-  display: block;
-  color: #0d1441;
-  font-weight: 700;
+  color: #1e293b;
+  transition: color 0.2s ease;
+
+  &.active {
+    // color: var(--q-primary, #0d1441);
+    color: rgba(193, 0, 21, 0.8);
+  }
 }
 
-.listings .item .title small {
-  font-weight: 400;
+.facility-card-action-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 4px 14px;
+  background-color: var(--q-primary, #0d1441);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--q-primary, #0d1441);
+    opacity: 0.9;
+  }
 }
 
-.listings .item .active,
-.listings .item .title:hover {
-  color: rgba(13, 20, 65, 0.7);
-}
+// ::-webkit-scrollbar {
+//   width: 3px;
+//   height: 3px;
+//   border-left: 0;
+//   background: transparent;
+//   // background: rgba(0, 0, 0, 0.1);
+// }
 
-.listings .active {
-  background-color: #f8f8f8;
-}
+// ::-webkit-scrollbar-track {
+//   background: none;
+// }
 
-::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
-  border-left: 0;
-  background: rgba(0, 0, 0, 0.1);
-}
+// ::-webkit-scrollbar-thumb {
+//   background: transparent;
+//   // background: #0d1441;
+//   border-radius: 0;
+// }
 
-::-webkit-scrollbar-track {
-  background: none;
+/* Scrollbars */
+.listings::-webkit-scrollbar {
+  width: 5px;
 }
+.listings::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.listings::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 
-::-webkit-scrollbar-thumb {
-  background: #0d1441;
-  border-radius: 0;
+  &:hover {
+    background: #94a3b8;
+  }
 }
 
 .map-locations {
-  width: 66.6666%;
-  max-width: 66.6666%;
-  height: 75vh;
+  width: 60%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 
   .basemap {
     width: 100%;
@@ -889,21 +1144,15 @@ a:hover {
 .filter-btn {
   font-weight: 600;
   font-size: 13px;
-  letter-spacing: 0.2px;
   color: var(--q-primary, #0d1441);
   background-color: #f8fafc;
-  /* Variant of #0d1441 (18% opacity border) */
   border: 1px solid rgba(13, 20, 65, 0.18);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
 
   &:hover {
     background-color: #f1f5f9;
-    color: var(--q-primary, #0d1441);
-    /* Border darkens to 40% opacity variant on hover */
     border-color: rgba(13, 20, 65, 0.4);
     transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(13, 20, 65, 0.08);
   }
 
   /* Active / Selected State */
@@ -911,7 +1160,8 @@ a:hover {
     background-color: var(--q-primary, #0d1441);
     color: #ffffff;
     border-color: var(--q-primary, #0d1441);
-    box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
+    // box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
+    box-shadow: 0 4px 10px rgba(13, 20, 65, 0.2);
 
     &:hover {
       background-color: var(--q-primary, #0d1441);
@@ -921,22 +1171,22 @@ a:hover {
     }
   }
 
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
+  // &:active {
+  //   transform: translateY(0);
+  //   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  // }
 
   /* Muted / Zero Results State */
   &.is-empty:not(.selected) {
     opacity: 0.55;
     background-color: #f1f5f9;
     border-style: dashed;
-    border-color: rgba(13, 20, 65, 0.15);
+    // border-color: rgba(13, 20, 65, 0.15);
 
-    &:hover {
-      opacity: 0.85;
-      border-style: solid;
-    }
+    // &:hover {
+    //   opacity: 0.85;
+    //   border-style: dashed;
+    // }
   }
 }
 
@@ -946,52 +1196,50 @@ a:hover {
   backdrop-filter: blur(4px);
   color: #ffffff !important;
   font-size: 12px !important;
-  font-weight: 500 !important;
   padding: 6px 12px !important;
   border-radius: 6px !important;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 
   /* Refetch indicator pill inside tooltip */
   .tooltip-badge {
     display: inline-flex;
     align-items: center;
     background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff; /* Soft blue highlight */
-    // color: #93c5fd; /* Soft blue highlight */
+    color: #ffffff;
     font-size: 10px;
-    font-weight: 600;
     padding: 2px 6px;
     border-radius: 4px;
-    letter-spacing: 0.3px;
     text-transform: uppercase;
   }
 }
 
 .email {
-  color: #2233a1;
+  color: var(--q-primary, #0d1441);
   text-decoration: none;
-}
-.email:hover {
-  color: #2233a1;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 768px) {
   .section {
     flex-direction: column;
-    text-align: center;
+    height: auto;
   }
-  .side-content {
-    width: 100%;
-    max-width: 100%;
-    height: fit-content;
-    text-align: left;
-    margin-bottom: 48px;
-  }
+
   .map-locations {
     width: 100%;
-    max-width: 100%;
-    height: 50vh;
+    height: 350px;
+    order: -1; /* Move map to top on mobile viewports */
+  }
+
+  .side-content {
+    width: 100%;
+    height: auto;
+  }
+
+  .listings {
+    padding-right: 0;
   }
 }
 </style>
