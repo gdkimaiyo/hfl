@@ -18,6 +18,7 @@ const propertiesSchema = new Schema(
     isSuggested: { type: Boolean, required: false, default: false },
     distance: { type: Number, required: false },
     isPrivate: { type: Boolean, required: true, default: false },
+    image: { type: String, required: false },
   },
   { _id: false },
 );

@@ -229,8 +229,8 @@
               <div class="image-wrapper">
                 <q-img
                   alt="Facility Image"
-                  src="../../assets/facilities/mtrh-2.jpg"
-                  height="160px"
+                  :src="getFacilityImage(facility.properties.image)"
+                  height="250px"
                   class="rounded-borders facility-img"
                   fit="cover"
                 >
@@ -362,7 +362,7 @@ import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/fac
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
 // Utils / Constants
-import { createPopUp, isHandset } from "../../utils/helpers";
+import { createPopUp, getFacilityImage, isHandset } from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
 export default defineComponent({
@@ -915,6 +915,7 @@ export default defineComponent({
       handleRadiusFilter,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
+      getFacilityImage,
     };
   },
 });
