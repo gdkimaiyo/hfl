@@ -27,6 +27,7 @@ export type Property = {
   mailingAddress?: string;
   postalCode?: string;
   distance?: number;
+  image?: string;
 };
 
 export type FacilityGeoJSON = {

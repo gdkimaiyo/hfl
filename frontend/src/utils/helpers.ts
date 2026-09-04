@@ -49,3 +49,17 @@ export const createPopUp = (currentFeature: FacilityFeature, mapRef: any) => {
 export const isHandset = () => {
   return screen.width <= 575 ? true : false;
 };
+
+export const getFacilityImage = (imageName?: string): string => {
+  if (!imageName) {
+    return new URL("../assets/facilities/national-cancer-institute.jpg", import.meta.url).href;
+  }
+
+  try {
+    return new URL(`../assets/facilities/${imageName}`, import.meta.url).href;
+  } catch (e) {
+    console.log(e);
+    // Fallback if the image file doesn't exist at the given path
+    return new URL("../assets/facilities/national-cancer-institute.jpg", import.meta.url).href;
+  }
+};
