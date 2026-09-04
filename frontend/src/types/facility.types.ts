@@ -27,9 +27,15 @@ export type Property = {
   mailingAddress?: string;
   postalCode?: string;
   distance?: number;
+  image?: string;
 };
 
 export type FacilityGeoJSON = {
   type: "FeatureCollection";
   features: FacilityFeature[];
+};
+
+export type Distance = {
+  id: string;
+  radius: number;
 };
