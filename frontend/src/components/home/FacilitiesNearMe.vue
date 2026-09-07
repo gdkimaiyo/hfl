@@ -1,31 +1,90 @@
 <!-- FacilitiesNearMe.vue -->
 <template>
   <div id="facilities-near-me" ref="#facilities-near-me" class="main-page">
-    <!-- Initial Loading State ONLY (First mount) -->
+    <!-- Initial Loading State ONLY (First mount / Map Bootstrap) -->
     <div
       v-if="(isLocating && !map) || (isLoading && !map)"
-      class="flex flex-center loader-container"
+      id="map-section"
+      ref="mapSection"
+      class="skeleton-workspace"
     >
-      <q-spinner color="primary" size="3em" />
+      <header class="top-header-section q-mb-md">
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">Facilities Near Me</div>
+
+        <div class="filters q-py-sm row items-center gap-xs">
+          <q-skeleton
+            v-for="dist in distance"
+            :key="'skeleton-radius-' + dist.radius"
+            type="QBtn"
+            animation="wave"
+            class="skeleton-filter-pill"
+          />
+          <q-separator vertical class="q-mx-xs" />
+          <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+          <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+        </div>
+
+        <q-skeleton type="text" width="40%" height="18px" animation="wave" class="q-mt-xs" />
+      </header>
+
+      <q-separator class="q-mb-md" />
+
+      <main class="section">
+        <aside class="side-content">
+          <div class="listings">
+            <div v-for="dummy in 3" :key="'skeleton-card-' + dummy" class="item">
+              <div class="image-wrapper">
+                <q-skeleton type="rect" height="250px" class="rounded-borders" animation="wave" />
+              </div>
+
+              <div class="after-img-content">
+                <q-skeleton
+                  type="text"
+                  height="24px"
+                  width="80%"
+                  animation="wave"
+                  class="q-mb-xs"
+                />
+                <q-skeleton
+                  type="text"
+                  height="16px"
+                  width="55%"
+                  animation="wave"
+                  class="q-mb-xs"
+                />
+                <q-skeleton
+                  type="text"
+                  height="16px"
+                  width="40%"
+                  animation="wave"
+                  class="q-mb-sm"
+                />
+
+                <div class="row q-gutter-xs q-my-xs">
+                  <q-skeleton type="QBadge" width="50px" height="20px" animation="wave" />
+                  <q-skeleton type="QBadge" width="75px" height="20px" animation="wave" />
+                </div>
+
+                <div class="row items-center justify-between pt-xs q-mt-md">
+                  <q-skeleton type="text" width="30%" height="18px" animation="wave" />
+                  <q-skeleton
+                    type="QBtn"
+                    width="90px"
+                    height="32px"
+                    animation="wave"
+                    class="skeleton-pill-btn"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="map-locations">
+          <q-skeleton type="rect" height="100%" animation="wave" class="basemap-skeleton" />
+        </section>
+      </main>
     </div>
-
-    <!--
-      Error Banner UI
-      TODO 1. Redesign UI
-    -->
-
-    <q-banner
-      v-else-if="fetchFacilitiesError"
-      class="bg-negative text-white q-mb-md rounded-borders"
-    >
-      <template #avatar>
-        <q-icon name="signal_wifi_off" color="white" />
-      </template>
-      {{ getErrorMessage(fetchFacilitiesError) }}
-      <template #action>
-        <q-btn flat color="white" label="Try Again" @click="refetch()" />
-      </template>
-    </q-banner>
 
     <div v-else id="map-section" ref="#map-section">
       <header class="top-header-section q-mb-md">
@@ -198,7 +257,7 @@
         <!-- Helpful Tip Bar -->
         <div class="info text-caption text-grey-7 flex items-center q-mt-xs">
           <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
-          Click on any facility card or map marker to draw a driving route.
+          Click on any facility card or map marker to draw a navigation route.
         </div>
       </header>
 
@@ -210,117 +269,189 @@
           <!-- <div class="side-header">
             <h1>Facilities ({{ displayedFacilities.length }})</h1>
           </div> -->
+
+          <!-- Fetch facilities error -->
           <div
-            v-if="isFetching"
-            class="q-pa-xs text-caption text-primary flex items-center bg-blue-1 rounded-borders"
+            v-if="
+              fetchFacilitiesError && (!displayedFacilities || displayedFacilities.length === 0)
+            "
+            class="error-container q-pa-lg text-center"
           >
-            <q-spinner size="1em" class="q-mr-xs" /> Updating distance boundary...
+            <q-icon name="signal_wifi_off" size="48px" class="muted q-mb-sm" />
+            <div class="text-subtitle1 text-bold text-negative q-mb-xs">
+              Failed to Load Facilities
+            </div>
+            <div class="text-caption text-grey-7 q-mb-md">
+              {{ getErrorMessage(fetchFacilitiesError) }}
+            </div>
+            <q-btn
+              rounded
+              unelevated
+              color="primary"
+              icon="refresh"
+              label="Retry"
+              @click="refetch()"
+            />
           </div>
 
-          <div id="listings" class="listings">
-            <div
-              v-for="facility in displayedFacilities"
-              :key="facility.properties.id"
-              :id="'listing-' + facility.properties.id"
-              class="item"
-              :class="{ 'is-selected': selectedFacility === facility.properties.id }"
-              @click="showFacility(facility.properties.id ?? 0)"
-            >
-              <div class="image-wrapper">
-                <q-img
-                  alt="Facility Image"
-                  :src="getFacilityImage(facility.properties.image)"
-                  height="250px"
-                  class="rounded-borders facility-img"
-                  fit="cover"
-                >
-                  <template #loading>
-                    <q-spinner color="primary" size="20px" />
-                  </template>
-                </q-img>
-              </div>
-
-              <div class="after-img-content">
-                <div
-                  :id="'link-' + facility.properties.id"
-                  class="title text-subtitle1 text-bold"
-                  :class="{ active: selectedFacility === facility.properties.id }"
-                  @mouseenter="hoverFacility(facility.properties.id ?? 0)"
-                  @mouseleave="clearFacilityHover"
-                >
-                  {{ facility.properties.name }}
-                </div>
-
-                <div
-                  v-if="facility.properties.address"
-                  class="text-caption text-grey-7 q-mb-xs flex items-center"
-                >
-                  <q-icon name="place" size="13px" class="q-mr-xs" />
-                  {{ facility.properties.address }}
-                </div>
-
-                <!-- Contact Information -->
-                <div
-                  v-if="facility.properties.phone || facility.properties.email"
-                  class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
-                >
-                  <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
-                    <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
-                    {{ facility.properties.phone.split("/")[0] }}
-                  </span>
-                  <span
-                    v-if="facility.properties.phone && facility.properties.email"
-                    class="text-grey-4 q-mx-sm"
-                    >•</span
+          <div
+            id="listings"
+            class="listings"
+            :style="{ opacity: isFetching ? '0.6' : '1', transition: 'opacity 0.2s' }"
+          >
+            <template v-if="displayedFacilities && displayedFacilities.length > 0">
+              <div
+                v-for="facility in displayedFacilities"
+                :key="facility.properties.id"
+                :id="'listing-' + facility.properties.id"
+                class="item"
+                :class="{ 'is-selected': selectedFacility === facility.properties.id }"
+                @click="showFacility(facility.properties.id ?? 0)"
+              >
+                <div class="image-wrapper">
+                  <q-img
+                    alt="Facility Image"
+                    :src="getFacilityImage(facility.properties.image)"
+                    height="250px"
+                    class="rounded-borders facility-img"
+                    fit="cover"
                   >
-                  <span v-if="facility.properties.email" class="flex items-center">
-                    <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
-                    <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
-                      {{ facility.properties.email }}
-                    </a>
-                  </span>
+                    <template #loading>
+                      <q-spinner color="primary" size="20px" />
+                    </template>
+                  </q-img>
                 </div>
 
-                <!-- Facility Badges -->
-                <div class="row q-gutter-xs q-mt-xs">
-                  <q-badge
-                    unelevated
-                    :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
-                    :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
-                    class="text-caption text-weight-medium"
+                <div class="after-img-content">
+                  <div
+                    :id="'link-' + facility.properties.id"
+                    class="title text-subtitle1 text-bold"
+                    :class="{ active: selectedFacility === facility.properties.id }"
+                    @mouseenter="hoverFacility(facility.properties.id ?? 0)"
+                    @mouseleave="clearFacilityHover"
                   >
-                    {{ facility.properties.isPrivate ? "Private" : "Public" }}
-                  </q-badge>
-                  <q-badge outline color="primary" class="text-caption text-weight-medium">
-                    {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
-                  </q-badge>
-                </div>
-
-                <!-- Distance and Actions Footer -->
-                <div
-                  class="row items-center justify-between text-primary text-bold q-mt-md pt-xs"
-                  v-if="facility.properties.distance !== undefined"
-                >
-                  <div class="flex items-center text-caption text-weight-bold">
-                    <q-icon name="directions_car" size="14px" class="q-mr-xs" />
-                    {{ facility.properties.distance }} km away
+                    {{ facility.properties.name }}
                   </div>
-                  <div class="q-mb-md">
-                    <q-btn
-                      flat
-                      rounded
-                      no-caps
-                      class="facility-card-action-btn"
-                      size="sm"
-                      @click.stop
+
+                  <div
+                    v-if="facility.properties.address"
+                    class="text-caption text-grey-7 q-mb-xs flex items-center"
+                  >
+                    <q-icon name="place" size="13px" class="q-mr-xs" />
+                    {{ facility.properties.address }}
+                  </div>
+
+                  <!-- Contact Information -->
+                  <div
+                    v-if="facility.properties.phone || facility.properties.email"
+                    class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
+                  >
+                    <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
+                      <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
+                      {{ facility.properties.phone.split("/")[0] }}
+                    </span>
+                    <span
+                      v-if="facility.properties.phone && facility.properties.email"
+                      class="text-grey-4 q-mx-sm"
+                      >•</span
                     >
-                      Services
-                      <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
-                    </q-btn>
+                    <span v-if="facility.properties.email" class="flex items-center">
+                      <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
+                      <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
+                        {{ facility.properties.email }}
+                      </a>
+                    </span>
+                  </div>
+
+                  <!-- Facility Badges -->
+                  <div class="row q-gutter-xs q-mt-xs q-mb-md">
+                    <q-badge
+                      unelevated
+                      :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
+                      :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
+                      class="text-caption text-weight-medium"
+                    >
+                      {{ facility.properties.isPrivate ? "Private" : "Public" }}
+                    </q-badge>
+                    <q-badge outline color="primary" class="text-caption text-weight-medium">
+                      {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
+                    </q-badge>
+                  </div>
+
+                  <!-- Distance and Actions Footer -->
+                  <div
+                    class="row items-center justify-between text-primary text-bold pt-xs"
+                    v-if="facility.properties.distance !== undefined"
+                  >
+                    <div class="flex items-center text-caption text-weight-bold">
+                      <q-icon name="directions_car" size="14px" class="q-mr-xs" />
+                      {{ facility.properties.distance }} km away
+                    </div>
+                    <div class="q-mb-md">
+                      <q-btn
+                        flat
+                        rounded
+                        no-caps
+                        class="facility-card-action-btn"
+                        size="sm"
+                        @click.stop
+                      >
+                        Services
+                        <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
+                      </q-btn>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </template>
+
+            <template v-else-if="isFetching">
+              <div v-for="dummy in 3" :key="dummy" class="item q-mb-md">
+                <div class="image-wrapper">
+                  <q-skeleton type="rect" height="250px" class="rounded-borders" animation="wave" />
+                </div>
+
+                <div class="after-img-content">
+                  <q-skeleton
+                    type="text"
+                    height="24px"
+                    width="80%"
+                    animation="wave"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    height="16px"
+                    width="55%"
+                    animation="wave"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    height="16px"
+                    width="40%"
+                    animation="wave"
+                    class="q-mb-sm"
+                  />
+
+                  <div class="row q-gutter-xs q-my-xs">
+                    <q-skeleton type="QBadge" width="50px" height="20px" animation="wave" />
+                    <q-skeleton type="QBadge" width="75px" height="20px" animation="wave" />
+                  </div>
+
+                  <div class="row items-center justify-between pt-xs q-mt-md">
+                    <q-skeleton type="text" width="30%" height="18px" animation="wave" />
+                    <q-skeleton
+                      type="QBtn"
+                      width="90px"
+                      height="32px"
+                      animation="wave"
+                      class="skeleton-pill-btn"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </aside>
 
@@ -349,8 +480,6 @@ import { useRouter } from "vue-router";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useQuery } from "@tanstack/vue-query";
-// Axios
-import { AxiosError } from "axios";
 
 import { MAPBOX_TOKEN } from "../../secrets.config";
 
@@ -362,7 +491,7 @@ import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/fac
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
 // Utils / Constants
-import { createPopUp, getFacilityImage, isHandset } from "../../utils/helpers";
+import { createPopUp, getErrorMessage, getFacilityImage, isHandset } from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
 export default defineComponent({
@@ -378,6 +507,7 @@ export default defineComponent({
     const isLocating = ref<boolean>(true);
 
     const router = useRouter();
+    // const $q = useQuasar();
 
     // API Distance Radius state (Defaults to 15km)
     const apiQueryRadius = ref<number>(15);
@@ -793,22 +923,6 @@ export default defineComponent({
       return normalizedFacilityType.includes(normalizedSelectedType);
     };
 
-    const getErrorMessage = (err: unknown): string => {
-      if (err instanceof AxiosError) {
-        if (err.code === "ERR_NETWORK" || err.code === "ERR_CONNECTION_REFUSED") {
-          return "Unable to connect to server! Please try again.";
-        }
-        if (err.response?.status === 404) {
-          return "Requested facility endpoint was not found (404).";
-        }
-        if (err.response?.status === 500) {
-          return "Internal server error. Please try again later.";
-        }
-        return err.response?.data?.message || err.message;
-      }
-      return err instanceof Error ? err.message : "An unexpected error occurred.";
-    };
-
     // WATCHERS & LIFECYCLE
     // Replaces mounted(). Wait until both Vue Query has the facilities data
     // AND the DOM container element reference is populated before loading the map.
@@ -838,6 +952,20 @@ export default defineComponent({
         //   icon: "error",
         //   timeout: 7000,
         //   actions: [{ label: "Retry", color: "white", handler: () => void refetch() }],
+        // });
+
+        // $q.notify({
+        //   type: "negative",
+        //   message: getErrorMessage(newError),
+        //   icon: "error",
+        //   timeout: 7000,
+        //   actions: [
+        //     {
+        //       label: "Retry",
+        //       color: "white",
+        //       handler: () => void refetch(),
+        //     },
+        //   ],
         // });
       }
     });
@@ -948,6 +1076,7 @@ export default defineComponent({
 .info {
   // color: #6c757d;
   font-size: 13px;
+  padding-left: 6px;
 }
 
 :deep(.user-location-marker) {
@@ -986,6 +1115,33 @@ export default defineComponent({
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+
+  /* Thin animated progress bar pinned to the top of the sidebar */
+  .refetch-progress-bar {
+    height: 3px;
+    z-index: 10;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+
+  /* Floating, non-blocking status badge */
+  .refetch-pill {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--q-primary);
+    pointer-events: none;
+  }
 }
 
 .side-header {
@@ -1017,6 +1173,13 @@ a:hover {
   flex: 1;
   overflow-y: auto;
   padding-right: 8px;
+  // transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease-in-out;
+
+  &.is-refetching {
+    opacity: 0.55;
+    pointer-events: none; /* Prevents clicks while fetching new boundaries */
+  }
 }
 
 .listings .item {
@@ -1127,6 +1290,7 @@ a:hover {
   .basemap {
     width: 100%;
     height: 100%;
+    border-radius: 12px;
   }
 }
 
@@ -1220,6 +1384,37 @@ a:hover {
   &:hover {
     text-decoration: underline;
   }
+}
+
+/* Skeleton Utility Layout Styles */
+.skeleton-filter-pill {
+  width: 68px;
+  height: 34px;
+  border-radius: 18px !important;
+}
+
+.skeleton-pill-btn {
+  border-radius: 18px !important;
+}
+
+.basemap-skeleton {
+  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Transition for the status pill */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -6px);
 }
 
 @media only screen and (max-width: 768px) {
