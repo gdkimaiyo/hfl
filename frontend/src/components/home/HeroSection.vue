@@ -35,72 +35,125 @@
 
       <!-- Right Column: Interactive Suggested Facility Map -->
       <div class="suggested-facilities">
-        <div id="top5mapContainer" class="heromap"></div>
+        <!-- Loading State - Map Skeleton -->
+        <div v-if="!userLocation || isLocating || isLoading || isFetching" class="map-locations">
+          <q-skeleton animation="wave" class="heromap heromap-skeleton" />
+        </div>
+        <div v-else class="map-locations">
+          <div id="top5mapContainer" class="heromap"></div>
+        </div>
 
-        <!-- Facility Card & Carousel Navigation Controls -->
-        <div v-if="currentFacility" class="facility-card q-mt-md q-pa-md">
+        <!-- Loading State - Facilities Carousel Skeleton -->
+        <div
+          v-if="!userLocation || isLocating || isLoading || isFetching"
+          class="facility-card q-mt-md q-pa-md"
+        >
           <div class="row items-center justify-between q-mb-xs">
-            <span class="text-caption text-uppercase text-weight-medium text-grey-4">
-              Top {{ totalSuggested }} Facilities in proximity to me
-            </span>
+            <q-skeleton type="text" width="75%" animation="wave" />
             <div class="row q-gutter-xs">
-              <q-btn
-                icon="chevron_left"
-                flat
-                round
-                dense
-                color="white"
-                :disabled="totalSuggested <= 1"
-                @click="prevFacility"
-              />
-              <q-btn
-                icon="chevron_right"
-                flat
-                round
-                dense
-                color="white"
-                :disabled="totalSuggested <= 1"
-                @click="nextFacility"
-              />
+              <q-btn icon="chevron_left" flat round dense color="white" disabled />
+              <q-btn icon="chevron_right" flat round dense color="white" disabled />
             </div>
           </div>
 
-          <q-banner
-            v-if="!isLocating && !isLoading && !userLocation"
-            dense
-            inline-actions
-            class="bg-amber-1 text-amber-10 q-mb-sm rounded-borders text-caption"
+          <q-skeleton type="text" width="100%" animation="wave" />
+          <q-skeleton type="text" width="100%" animation="wave" />
+          <q-skeleton type="text" width="100%" animation="wave" />
+          <q-skeleton type="text" width="100%" animation="wave" />
+          <q-skeleton type="text" width="50%" animation="wave" />
+        </div>
+
+        <div v-else>
+          <!-- Fetch suggested facilities error -->
+          <div
+            v-if="fetchFacilitiesError && !currentFacility"
+            class="facility-card error-container q-mt-md q-pa-md text-center"
           >
-            <template #avatar>
-              <q-icon name="location_off" color="amber-9" size="xs" />
-            </template>
-            Location disabled — showing top facilities in Kenya - may not be nearest to you.
-          </q-banner>
-
-          <div class="text-h6 text-bold text-white ellipsis">
-            {{ currentFacility.properties.name }}
-          </div>
-
-          <div class="row items-center text-subtitle2 text-grey-3 q-mt-xs">
-            <q-icon name="place" size="16px" class="q-mr-xs" />
-            <span class="ellipsis col">{{
-              currentFacility.properties.address || "Address unavailable"
-            }}</span>
-          </div>
-
-          <div class="row items-center q-gutter-x-md q-mt-sm">
-            <q-chip
-              v-if="currentFacility.properties.distance !== undefined"
+            <q-icon name="signal_wifi_off" color="white" size="28px" class="q-mb-xs" />
+            <div class="text-subtitle2 text-bold text-white q-mb-xs">
+              Failed to load suggested facilities
+            </div>
+            <div class="text-caption text-grey-3 q-mb-md">
+              {{ getErrorMessage(fetchFacilitiesError) }}
+            </div>
+            <q-btn
               dense
-              color="primary"
-              text-color="white"
-              icon="directions_car"
+              rounded
+              unelevated
+              color="white"
+              text-color="primary"
+              icon="refresh"
+              label="Retry"
+              class="q-px-md"
+              @click="refetch()"
+            />
+          </div>
+
+          <!-- Facility Card & Carousel Navigation Controls -->
+          <div v-if="currentFacility" class="facility-card q-mt-md q-pa-md">
+            <div class="row items-center justify-between q-mb-xs">
+              <span class="text-caption text-uppercase text-weight-medium text-grey-4">
+                Top {{ totalSuggested }} Facilities in proximity to me
+              </span>
+              <div class="row q-gutter-xs">
+                <q-btn
+                  icon="chevron_left"
+                  flat
+                  round
+                  dense
+                  color="white"
+                  :disabled="totalSuggested <= 1"
+                  @click="prevFacility"
+                />
+                <q-btn
+                  icon="chevron_right"
+                  flat
+                  round
+                  dense
+                  color="white"
+                  :disabled="totalSuggested <= 1"
+                  @click="nextFacility"
+                />
+              </div>
+            </div>
+
+            <q-banner
+              v-if="!isLocating && !isLoading && !userLocation"
+              dense
+              inline-actions
+              class="bg-amber-1 text-amber-10 q-mb-sm rounded-borders text-caption"
             >
-              {{ currentFacility.properties.distance }} km away
-            </q-chip>
-            <q-chip dense outline color="white">
-              {{ currentFacility.properties.isPrivate ? "Private" : "Public" }}
-            </q-chip>
+              <template #avatar>
+                <q-icon name="location_off" color="amber-9" size="xs" />
+              </template>
+              Location disabled — showing top facilities in Kenya - may not be nearest to you.
+            </q-banner>
+
+            <div class="text-h6 text-bold text-white ellipsis">
+              {{ currentFacility.properties.name }}
+            </div>
+
+            <div class="row items-center text-subtitle2 text-grey-3 q-mt-xs">
+              <q-icon name="place" size="16px" class="q-mr-xs" />
+              <span class="ellipsis col">{{
+                currentFacility.properties.address || "Address unavailable"
+              }}</span>
+            </div>
+
+            <div class="row items-center q-gutter-x-md q-mt-sm">
+              <q-chip
+                v-if="currentFacility.properties.distance !== undefined"
+                dense
+                color="primary"
+                text-color="white"
+                icon="directions_car"
+              >
+                {{ currentFacility.properties.distance }} km away
+              </q-chip>
+              <q-chip dense outline color="white">
+                {{ currentFacility.properties.isPrivate ? "Private" : "Public" }}
+              </q-chip>
+            </div>
           </div>
         </div>
       </div>
@@ -109,7 +162,16 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, onMounted, onUnmounted, ref, shallowRef } from "vue";
+import {
+  computed,
+  defineComponent,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  shallowRef,
+  watch,
+} from "vue";
 import { Notify } from "quasar";
 import { useRouter } from "vue-router";
 import { useQuery } from "@tanstack/vue-query";
@@ -124,7 +186,7 @@ import { getSuggestedFacilities } from "../../services/facility.service";
 import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
 
 // Utils / Helpers / Constants
-import { createPopUp } from "../../utils/helpers";
+import { createPopUp, getErrorMessage } from "../../utils/helpers";
 
 export default defineComponent({
   name: "HomeHeroSection",
@@ -142,6 +204,8 @@ export default defineComponent({
     // const userLocation = ref<[number, number] | null>([35.30642810318034, 0.5443346870559028]);
     const userLocation = ref<[number, number] | null>(null);
     const isLocating = ref<boolean>(true);
+
+    // const $q = useQuasar();
 
     // GET DEVICE LOCATION
     const locateUser = () => {
@@ -171,7 +235,9 @@ export default defineComponent({
     const {
       data: suggestedFacilities,
       isLoading,
+      isFetching,
       refetch,
+      error: fetchFacilitiesError,
     } = useQuery<FacilityGeoJSON>({
       queryKey: ["suggested-facilities"],
       queryFn: async () => {
@@ -399,6 +465,27 @@ export default defineComponent({
       void router.push(route);
     };
 
+    // WATCHERS & LIFECYCLE
+    watch(fetchFacilitiesError, (newError) => {
+      if (newError) {
+        console.error("Facility Query Error:", newError);
+
+        // $q.notify({
+        //   type: "negative",
+        //   message: getErrorMessage(newError),
+        //   icon: "error",
+        //   timeout: 7000,
+        //   actions: [
+        //     {
+        //       label: "Retry",
+        //       color: "white",
+        //       handler: () => void refetch(),
+        //     },
+        //   ],
+        // });
+      }
+    });
+
     onMounted(async () => {
       try {
         // Force the API to fetch data and wait for it to finish completely
@@ -433,9 +520,13 @@ export default defineComponent({
       prevFacility,
       userLocation,
       isLoading,
+      isFetching,
       isLocating,
+      refetch,
+      getErrorMessage,
       scrollTo,
       goTo,
+      fetchFacilitiesError,
     };
   },
 });
@@ -445,7 +536,7 @@ export default defineComponent({
 .hero-section {
   background: linear-gradient(135deg, #0d1441 0%, #2233a1 100%);
   padding: 24px;
-  min-height: 87vh;
+  min-height: 93vh;
 
   .hero-content {
     width: 100%;
@@ -480,12 +571,28 @@ export default defineComponent({
     width: 48%;
     max-width: 48%;
 
-    .heromap {
+    .map-locations {
       width: 100%;
       height: 320px;
-      border-radius: 16px !important;
-      // overflow: hidden;
+      border-radius: 16px;
+      overflow: hidden;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+
+      .heromap {
+        width: 100%;
+        height: 100%;
+        border-radius: 16px;
+        transform: translateZ(0);
+
+        :deep(.mapboxgl-canvas-container),
+        :deep(.mapboxgl-canvas) {
+          border-radius: 16px;
+        }
+      }
+    }
+
+    .heromap-skeleton {
+      background-color: rgba(255, 255, 255, 0.15);
     }
 
     .facility-card {
@@ -494,6 +601,28 @@ export default defineComponent({
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
     }
+  }
+}
+
+:deep(.user-location-marker) {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #007cbf;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 10px rgba(0, 124, 191, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 124, 191, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 124, 191, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 124, 191, 0);
   }
 }
 

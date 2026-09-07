@@ -1,6 +1,9 @@
 import mapboxgl from "mapbox-gl";
 import type { FacilityFeature } from "../types/facility.types";
 
+// Axios
+import { AxiosError } from "axios";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createPopUp = (currentFeature: FacilityFeature, mapRef: any) => {
   if (!mapRef.value) return;
@@ -62,4 +65,20 @@ export const getFacilityImage = (imageName?: string): string => {
     // Fallback if the image file doesn't exist at the given path
     return new URL("../assets/facilities/national-cancer-institute.jpg", import.meta.url).href;
   }
+};
+
+export const getErrorMessage = (err: unknown): string => {
+  if (err instanceof AxiosError) {
+    if (err.code === "ERR_NETWORK" || err.code === "ERR_CONNECTION_REFUSED") {
+      return "Unable to connect to server! Please try again.";
+    }
+    if (err.response?.status === 404) {
+      return "Requested facility endpoint was not found (404).";
+    }
+    if (err.response?.status === 500) {
+      return "Internal server error. Please try again later.";
+    }
+    return err.response?.data?.message || err.message;
+  }
+  return err instanceof Error ? err.message : "An unexpected error occurred.";
 };
