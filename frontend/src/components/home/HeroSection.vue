@@ -36,7 +36,7 @@
       <!-- Right Column: Interactive Suggested Facility Map -->
       <div class="suggested-facilities">
         <!-- Loading State - Map Skeleton -->
-        <div v-if="!userLocation || isLocating || isLoading || isFetching" class="map-locations">
+        <div v-if="isLocating || isLoading || isFetching" class="map-locations">
           <q-skeleton animation="wave" class="heromap heromap-skeleton" />
         </div>
         <div v-else class="map-locations">
@@ -44,10 +44,7 @@
         </div>
 
         <!-- Loading State - Facilities Carousel Skeleton -->
-        <div
-          v-if="!userLocation || isLocating || isLoading || isFetching"
-          class="facility-card q-mt-md q-pa-md"
-        >
+        <div v-if="isLocating || isLoading || isFetching" class="facility-card q-mt-md q-pa-md">
           <div class="row items-center justify-between q-mb-xs">
             <q-skeleton type="text" width="75%" animation="wave" />
             <div class="row q-gutter-xs">
@@ -85,7 +82,7 @@
               icon="refresh"
               label="Retry"
               class="q-px-md"
-              @click="refetch()"
+              @click="handleRetry()"
             />
           </div>
 
@@ -204,6 +201,8 @@ export default defineComponent({
     // const userLocation = ref<[number, number] | null>([35.30642810318034, 0.5443346870559028]);
     const userLocation = ref<[number, number] | null>(null);
     const isLocating = ref<boolean>(true);
+
+    const isHeroLoading = computed(() => isLocating.value || isLoading.value || isFetching.value);
 
     // const $q = useQuasar();
 
@@ -465,6 +464,41 @@ export default defineComponent({
       void router.push(route);
     };
 
+    const handleRetry = async () => {
+      try {
+        const result = await refetch();
+        if (result.data && result.data.features?.length > 0) {
+          await initializeHeroMap(result.data);
+        }
+      } catch (err) {
+        console.error("Retry failed:", err);
+      }
+    };
+
+    // HELPER FUNCTIONS
+    const initializeHeroMap = async (data: FacilityGeoJSON) => {
+      await nextTick();
+      if (document.getElementById("top5mapContainer")) {
+        // If map instance already exists, resize it; otherwise create it
+        if (map.value) {
+          map.value.resize();
+        } else {
+          mapboxMap(data);
+        }
+      } else {
+        // If DOM node isn't ready yet, wait until loading completes
+        const unwatch = watch(isHeroLoading, async (loading) => {
+          if (!loading) {
+            await nextTick();
+            if (document.getElementById("top5mapContainer")) {
+              mapboxMap(data);
+            }
+            unwatch();
+          }
+        });
+      }
+    };
+
     // WATCHERS & LIFECYCLE
     watch(fetchFacilitiesError, (newError) => {
       if (newError) {
@@ -493,8 +527,7 @@ export default defineComponent({
 
         // Ensure data came back safely and the DOM container exists
         if (result.data && result.data.features?.length > 0) {
-          await nextTick();
-          mapboxMap(result.data);
+          await initializeHeroMap(result.data);
         }
       } catch (error) {
         console.error("Failed mounting HeroSection:", error);
@@ -522,11 +555,11 @@ export default defineComponent({
       isLoading,
       isFetching,
       isLocating,
-      refetch,
       getErrorMessage,
       scrollTo,
       goTo,
       fetchFacilitiesError,
+      handleRetry,
     };
   },
 });
