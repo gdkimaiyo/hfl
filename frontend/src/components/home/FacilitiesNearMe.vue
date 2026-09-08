@@ -279,7 +279,7 @@
           >
             <q-icon name="signal_wifi_off" size="48px" class="muted q-mb-sm" />
             <div class="text-subtitle1 text-bold text-negative q-mb-xs">
-              Failed to Load Facilities
+              Failed to load facilities
             </div>
             <div class="text-caption text-grey-7 q-mb-md">
               {{ getErrorMessage(fetchFacilitiesError) }}
@@ -290,7 +290,7 @@
               color="primary"
               icon="refresh"
               label="Retry"
-              @click="refetch()"
+              @click="handleRetry()"
             />
           </div>
 
@@ -490,7 +490,7 @@ import { getFacilitiesNearMe } from "../../services/facility.service";
 import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
-// Utils / Constants
+// Utils / Helpers / Constants
 import { createPopUp, getErrorMessage, getFacilityImage, isHandset } from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
@@ -508,6 +508,10 @@ export default defineComponent({
 
     const router = useRouter();
     // const $q = useQuasar();
+
+    const isInLoadingState = computed(
+      () => (isLocating.value && !map.value) || (isLoading.value && !map.value) || isFetching.value,
+    );
 
     // API Distance Radius state (Defaults to 15km)
     const apiQueryRadius = ref<number>(15);
@@ -890,6 +894,41 @@ export default defineComponent({
       });
     };
 
+    const handleRetry = async () => {
+      try {
+        let result = await refetch();
+
+        const widerRadii = distance.value
+          .map((d) => d.radius)
+          .filter((r) => r > apiQueryRadius.value)
+          .sort((a, b) => a - b);
+
+        let i = 0;
+        while ((!result.data || result.data.features.length === 0) && i < widerRadii.length) {
+          apiQueryRadius.value = widerRadii[i] || 15;
+          result = await refetch();
+          i++;
+        }
+        if (result.data && result.data.features.length > 0) {
+          const distances = result.data.features
+            .map((f) => f.properties.distance)
+            .filter((d): d is number => d !== undefined);
+
+          if (distances.length > 0) {
+            const minDistance = Math.min(...distances);
+            const effectiveFilter = distance.value.find((d) => d.radius >= minDistance);
+            if (effectiveFilter) {
+              selectedFilterRadius.value = effectiveFilter.radius;
+            }
+          }
+
+          await initializeMap(displayedFacilities.value);
+        }
+      } catch (err) {
+        console.error("Retry failed:", err);
+      }
+    };
+
     // HELPER FUNCTIONS
     const getFacilityCountForRadius = (radius: number): number => {
       const allFeatures = rawFacilities.value?.features || [];
@@ -921,6 +960,29 @@ export default defineComponent({
       const normalizedSelectedType = selectedType.toLowerCase().replace(/[\s-_]/g, "");
 
       return normalizedFacilityType.includes(normalizedSelectedType);
+    };
+
+    const initializeMap = async (data: FacilityFeature[]) => {
+      await nextTick();
+      if (document.getElementById("mapContainer")) {
+        // If map instance already exists, resize it; otherwise create it
+        if (map.value) {
+          map.value.resize();
+        } else {
+          mapboxMap(data);
+        }
+      } else {
+        // If DOM node isn't ready yet, wait until loading completes
+        const unwatch = watch(isInLoadingState, async (loading) => {
+          if (!loading) {
+            await nextTick();
+            if (document.getElementById("mapContainer")) {
+              mapboxMap(data);
+            }
+            unwatch();
+          }
+        });
+      }
     };
 
     // WATCHERS & LIFECYCLE
@@ -1001,8 +1063,7 @@ export default defineComponent({
             }
           }
 
-          await nextTick();
-          mapboxMap(displayedFacilities.value);
+          await initializeMap(displayedFacilities.value);
         }
       } catch (error) {
         console.error("Failed mounting FacilitiesNearMe:", error);
@@ -1031,7 +1092,7 @@ export default defineComponent({
       showFacility,
       hoverFacility,
       clearFacilityHover,
-      refetch,
+      handleRetry,
       getErrorMessage,
       fetchFacilitiesError,
       selectedFilterRadius,
