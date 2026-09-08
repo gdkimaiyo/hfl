@@ -452,6 +452,29 @@
                 </div>
               </div>
             </template>
+
+            <!-- EMPTY STATE => No facilities after applying filter -->
+            <template v-else-if="displayedFacilities.length === 0">
+              <div class="empty-state-container q-pa-xl text-center flex flex-center column">
+                <q-icon name="domain_disabled" size="56px" color="grey-5" class="q-mb-sm" />
+                <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                  No facilities found nearby
+                </div>
+                <div class="text-caption text-grey-6 q-mb-md style-max-width">
+                  We couldn't find any facilities matching your current filter criteria. Try another
+                  filter or reset.
+                </div>
+                <q-btn
+                  outline
+                  rounded
+                  no-caps
+                  color="primary"
+                  icon="tune"
+                  label="Reset Filters"
+                  @click="resetFilters()"
+                />
+              </div>
+            </template>
           </div>
         </aside>
 
@@ -929,6 +952,11 @@ export default defineComponent({
       }
     };
 
+    const resetFilters = () => {
+      selectedOwnership.value = "both";
+      selectedHospitalType.value = "";
+    };
+
     // HELPER FUNCTIONS
     const getFacilityCountForRadius = (radius: number): number => {
       const allFeatures = rawFacilities.value?.features || [];
@@ -1093,6 +1121,7 @@ export default defineComponent({
       hoverFacility,
       clearFacilityHover,
       handleRetry,
+      resetFilters,
       getErrorMessage,
       fetchFacilitiesError,
       selectedFilterRadius,
@@ -1476,6 +1505,15 @@ a:hover {
 .fade-leave-to {
   opacity: 0;
   transform: translate(-50%, -6px);
+}
+
+.empty-state-container {
+  min-height: 280px;
+
+  .style-max-width {
+    max-width: 280px;
+    line-height: 1.4;
+  }
 }
 
 @media only screen and (max-width: 768px) {
