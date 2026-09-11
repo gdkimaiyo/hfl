@@ -81,7 +81,7 @@
               text-color="primary"
               icon="refresh"
               label="Retry"
-              class="q-px-md"
+              class="q-px-md q-mb-md"
               @click="handleRetry()"
             />
           </div>
@@ -137,7 +137,7 @@
               }}</span>
             </div>
 
-            <div class="row items-center q-gutter-x-md q-mt-sm">
+            <div class="row items-center q-gutter-x-md q-my-sm">
               <q-chip
                 v-if="currentFacility.properties.distance !== undefined"
                 dense

@@ -300,107 +300,138 @@
             :style="{ opacity: isFetching ? '0.6' : '1', transition: 'opacity 0.2s' }"
           >
             <template v-if="displayedFacilities && displayedFacilities.length > 0">
-              <div
-                v-for="facility in displayedFacilities"
-                :key="facility.properties.id"
-                :id="'listing-' + facility.properties.id"
-                class="item"
-                :class="{ 'is-selected': selectedFacility === facility.properties.id }"
-                @click="showFacility(facility.properties.id ?? 0)"
-              >
-                <div class="image-wrapper">
-                  <q-img
-                    alt="Facility Image"
-                    :src="getFacilityImage(facility.properties.image)"
-                    height="250px"
-                    class="rounded-borders facility-img"
-                    fit="cover"
-                  >
-                    <template #loading>
-                      <q-spinner color="primary" size="20px" />
-                    </template>
-                  </q-img>
+              <div v-for="(facility, index) in displayedFacilities" :key="facility.properties.id">
+                <div
+                  :id="'listing-' + facility.properties.id"
+                  class="item"
+                  :class="{ 'is-selected': selectedFacility === facility.properties.id }"
+                  @click="showFacility(facility.properties.id ?? 0)"
+                >
+                  <div class="image-wrapper">
+                    <q-img
+                      alt="Facility Image"
+                      :src="getFacilityImage(facility.properties.image)"
+                      height="250px"
+                      class="rounded-borders facility-img"
+                      fit="cover"
+                    >
+                      <template #loading>
+                        <q-spinner color="primary" size="20px" />
+                      </template>
+                    </q-img>
+                  </div>
+
+                  <div class="after-img-content">
+                    <div
+                      :id="'link-' + facility.properties.id"
+                      class="title text-subtitle1 text-bold"
+                      :class="{ active: selectedFacility === facility.properties.id }"
+                      @mouseenter="hoverFacility(facility.properties.id ?? 0)"
+                      @mouseleave="clearFacilityHover"
+                    >
+                      {{ facility.properties.name }}
+                    </div>
+
+                    <div
+                      v-if="facility.properties.address"
+                      class="text-caption text-grey-7 q-mb-xs flex items-center"
+                    >
+                      <q-icon name="place" size="13px" class="q-mr-xs" />
+                      {{ facility.properties.address }}
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div
+                      v-if="facility.properties.phone || facility.properties.email"
+                      class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
+                    >
+                      <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
+                        <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
+                        {{ facility.properties.phone.split("/")[0] }}
+                      </span>
+                      <span
+                        v-if="facility.properties.phone && facility.properties.email"
+                        class="text-grey-4 q-mx-sm"
+                        >•</span
+                      >
+                      <span v-if="facility.properties.email" class="flex items-center">
+                        <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
+                        <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
+                          {{ facility.properties.email }}
+                        </a>
+                      </span>
+                    </div>
+
+                    <!-- Facility Badges -->
+                    <div class="row q-gutter-xs q-mt-xs q-mb-md">
+                      <q-badge
+                        unelevated
+                        :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
+                        :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
+                        class="text-caption text-weight-medium"
+                      >
+                        {{ facility.properties.isPrivate ? "Private" : "Public" }}
+                      </q-badge>
+                      <q-badge outline color="primary" class="text-caption text-weight-medium">
+                        {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
+                      </q-badge>
+                    </div>
+
+                    <!-- Distance and Actions Footer -->
+                    <div
+                      class="row items-center justify-between text-primary text-bold pt-xs"
+                      v-if="facility.properties.distance !== undefined"
+                    >
+                      <div class="flex items-center text-caption text-weight-bold">
+                        <q-icon name="directions_car" size="14px" class="q-mr-xs" />
+                        {{ facility.properties.distance }} km away
+                      </div>
+                      <div class="q-mb-md">
+                        <q-btn
+                          flat
+                          rounded
+                          no-caps
+                          class="facility-card-action-btn"
+                          size="sm"
+                          @click.stop
+                        >
+                          Services
+                          <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
+                        </q-btn>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="after-img-content">
-                  <div
-                    :id="'link-' + facility.properties.id"
-                    class="title text-subtitle1 text-bold"
-                    :class="{ active: selectedFacility === facility.properties.id }"
-                    @mouseenter="hoverFacility(facility.properties.id ?? 0)"
-                    @mouseleave="clearFacilityHover"
-                  >
-                    {{ facility.properties.name }}
+                <!-- Inline CTA Card -->
+                <div
+                  v-if="index === ctaInsertionIndex"
+                  class="item-cta shadow-1 flex flex-center column q-pa-lg text-center"
+                  @click.stop="openAddFacilityDialog"
+                >
+                  <div class="cta-icon-wrapper q-mb-sm">
+                    <q-icon name="add_business" size="28px" color="primary" />
                   </div>
 
-                  <div
-                    v-if="facility.properties.address"
-                    class="text-caption text-grey-7 q-mb-xs flex items-center"
-                  >
-                    <q-icon name="place" size="13px" class="q-mr-xs" />
-                    {{ facility.properties.address }}
+                  <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                    Are you a Healthcare Provider?
                   </div>
 
-                  <!-- Contact Information -->
-                  <div
-                    v-if="facility.properties.phone || facility.properties.email"
-                    class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
-                  >
-                    <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
-                      <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
-                      {{ facility.properties.phone.split("/")[0] }}
-                    </span>
-                    <span
-                      v-if="facility.properties.phone && facility.properties.email"
-                      class="text-grey-4 q-mx-sm"
-                      >•</span
-                    >
-                    <span v-if="facility.properties.email" class="flex items-center">
-                      <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
-                      <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
-                        {{ facility.properties.email }}
-                      </a>
-                    </span>
-                  </div>
+                  <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
+                    List your clinic, hospital, or diagnostic center on our platform to help
+                    patients find your services and get real-time directions.
+                  </p>
 
-                  <!-- Facility Badges -->
-                  <div class="row q-gutter-xs q-mt-xs q-mb-md">
-                    <q-badge
-                      unelevated
-                      :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
-                      :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
-                      class="text-caption text-weight-medium"
-                    >
-                      {{ facility.properties.isPrivate ? "Private" : "Public" }}
-                    </q-badge>
-                    <q-badge outline color="primary" class="text-caption text-weight-medium">
-                      {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
-                    </q-badge>
-                  </div>
-
-                  <!-- Distance and Actions Footer -->
-                  <div
-                    class="row items-center justify-between text-primary text-bold pt-xs"
-                    v-if="facility.properties.distance !== undefined"
-                  >
-                    <div class="flex items-center text-caption text-weight-bold">
-                      <q-icon name="directions_car" size="14px" class="q-mr-xs" />
-                      {{ facility.properties.distance }} km away
-                    </div>
-                    <div class="q-mb-md">
-                      <q-btn
-                        flat
-                        rounded
-                        no-caps
-                        class="facility-card-action-btn"
-                        size="sm"
-                        @click.stop
-                      >
-                        Services
-                        <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
-                      </q-btn>
-                    </div>
-                  </div>
+                  <q-btn
+                    unelevated
+                    rounded
+                    no-caps
+                    color="primary"
+                    icon="add"
+                    label="Add Facility"
+                    class="q-px-md"
+                    @click.stop="openAddFacilityDialog()"
+                  />
                 </div>
               </div>
             </template>
@@ -454,7 +485,9 @@
             </template>
 
             <!-- EMPTY STATE => No facilities after applying filter -->
-            <template v-else-if="displayedFacilities.length === 0">
+            <template
+              v-else-if="!fetchFacilitiesError && !isFetching && displayedFacilities.length === 0"
+            >
               <div class="empty-state-container q-pa-xl text-center flex flex-center column">
                 <q-icon name="domain_disabled" size="56px" color="grey-5" class="q-mb-sm" />
                 <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
@@ -472,6 +505,38 @@
                   icon="tune"
                   label="Reset Filters"
                   @click="resetFilters()"
+                />
+              </div>
+
+              <!-- CTA Card Standalone -->
+              <div
+                class="item-cta standalone-cta shadow-1 flex flex-center column q-pa-lg text-center q-mt-md"
+                @click.stop="openAddFacilityDialog()"
+              >
+                <div class="cta-icon-wrapper q-mb-sm">
+                  <q-icon name="add_business" size="28px" color="primary" />
+                </div>
+
+                <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                  Own a facility in this area?
+                </div>
+
+                <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
+                  <!-- If your health center is located here but missing from our directory, submit your
+                facility details for verification. -->
+                  If your health facility is located here but missing from our directory, submit
+                  your facility details and the facility will be added.
+                </p>
+
+                <q-btn
+                  unelevated
+                  rounded
+                  no-caps
+                  color="primary"
+                  icon="add"
+                  label="Add Facility"
+                  class="q-px-md"
+                  @click.stop="openAddFacilityDialog()"
                 />
               </div>
             </template>
@@ -531,10 +596,6 @@ export default defineComponent({
 
     const router = useRouter();
     // const $q = useQuasar();
-
-    const isInLoadingState = computed(
-      () => (isLocating.value && !map.value) || (isLoading.value && !map.value) || isFetching.value,
-    );
 
     // API Distance Radius state (Defaults to 15km)
     const apiQueryRadius = ref<number>(15);
@@ -613,7 +674,25 @@ export default defineComponent({
       placeholderData: { type: "FeatureCollection", features: [] },
     });
 
-    // COMPUTED IN-MEMORY FILTERED LIST
+    // COMPUTED
+    // LOADING STATE
+    const isInLoadingState = computed(
+      () => (isLocating.value && !map.value) || (isLoading.value && !map.value) || isFetching.value,
+    );
+
+    // CTA INDEX
+    // Position CTA card naturally within the listing items
+    const ctaInsertionIndex = computed(() => {
+      const total = displayedFacilities.value.length;
+      if (total === 0) return -1;
+      if (total <= 3) return 0; // After the 1st item (index 0)
+      if (total === 4) return 2; // After the 3rd item (index 2)
+
+      // For larger lists (>4), place it at ~40% down the list
+      return Math.floor(total * 0.4) - 1;
+    });
+
+    // IN-MEMORY FILTERED LIST
     const displayedFacilities = computed<FacilityFeature[]>(() => {
       const allFeatures = rawFacilities.value?.features || [];
 
@@ -957,6 +1036,11 @@ export default defineComponent({
       selectedHospitalType.value = "";
     };
 
+    const openAddFacilityDialog = () => {
+      console.log("Open Add Facility Modal");
+      // Open Add Facility Modal
+    };
+
     // HELPER FUNCTIONS
     const getFacilityCountForRadius = (radius: number): number => {
       const allFeatures = rawFacilities.value?.features || [];
@@ -1134,6 +1218,8 @@ export default defineComponent({
       handleOwnershipFilter,
       handleHospitalTypeFilter,
       getFacilityImage,
+      ctaInsertionIndex,
+      openAddFacilityDialog,
     };
   },
 });
@@ -1367,6 +1453,45 @@ a:hover {
 
   &:hover {
     background: #94a3b8;
+  }
+}
+
+.listings {
+  .item-cta {
+    position: relative;
+    border: 1px dashed var(--q-primary);
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 12px;
+    margin: 16px 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+
+    .cta-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(var(--q-primary-rgb), 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .item-cta-desc {
+      max-width: 290px;
+      line-height: 1.45;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    &.standalone-cta {
+      border-style: solid;
+      background: #ffffff;
+    }
   }
 }
 
