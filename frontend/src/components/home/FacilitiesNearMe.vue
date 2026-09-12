@@ -264,8 +264,8 @@
       <!-- <q-separator spaced /> -->
       <q-separator class="q-mb-md" />
 
-      <main class="section">
-        <aside class="side-content">
+      <main class="section main-layout-container" :class="{ 'is-map-expanded': isMapExpanded }">
+        <section v-show="!isMapExpanded" class="side-content">
           <!-- <div class="side-header">
             <h1>Facilities ({{ displayedFacilities.length }})</h1>
           </div> -->
@@ -541,7 +541,7 @@
               </div>
             </template>
           </div>
-        </aside>
+        </section>
 
         <!-- RIGHT CONTENT: Sticky Map -->
         <section class="map-locations">
@@ -579,7 +579,13 @@ import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/fac
 // import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
 
 // Utils / Helpers / Constants
-import { createPopUp, getErrorMessage, getFacilityImage, isHandset } from "../../utils/helpers";
+import {
+  createPopUp,
+  getErrorMessage,
+  getFacilityImage,
+  isHandset,
+  MaximizeControl,
+} from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
 export default defineComponent({
@@ -593,6 +599,9 @@ export default defineComponent({
     const markersRef = shallowRef<mapboxgl.Marker[]>([]);
     const userLocation = ref<[number, number] | null>(null);
     const isLocating = ref<boolean>(true);
+
+    const isMapExpanded = ref<boolean>(false);
+    let maxControlInstance: MaximizeControl | null = null;
 
     const router = useRouter();
     // const $q = useQuasar();
@@ -864,8 +873,19 @@ export default defineComponent({
           new mapboxgl.Marker(userEl).setLngLat(userLocation.value).addTo(map.value);
         }
 
+        // Standard navigation controls
         const nav = new mapboxgl.NavigationControl();
         map.value.addControl(nav, "top-right");
+
+        // Add custom maximize control with callback handler
+        console.log(isHandset());
+        if (!isHandset()) {
+          // maxControlInstance = new MaximizeControl(toggleMapExpand);
+          maxControlInstance = new MaximizeControl(() => {
+            void toggleMapExpand();
+          });
+          map.value.addControl(maxControlInstance, "top-left");
+        }
 
         if (userLocation.value) fitMapToVisibleFacilities(data);
         addMarkers(data);
@@ -1039,6 +1059,32 @@ export default defineComponent({
     const openAddFacilityDialog = () => {
       console.log("Open Add Facility Modal");
       // Open Add Facility Modal
+    };
+
+    const toggleMapExpand = async () => {
+      isMapExpanded.value = !isMapExpanded.value;
+
+      // Update control button icon
+      if (maxControlInstance) {
+        maxControlInstance.updateIcon(isMapExpanded.value);
+      }
+
+      // Dynamically enable scrollZoom when expanded, disable when collapsed
+      if (map.value) {
+        if (isMapExpanded.value) {
+          map.value.scrollZoom.enable();
+        } else {
+          map.value.scrollZoom.disable();
+        }
+      }
+
+      // Wait for Vue template to hide sidebar & expand container width/height
+      await nextTick();
+
+      // Force Mapbox WebGL viewport recalculation
+      if (map.value) {
+        map.value.resize();
+      }
     };
 
     // HELPER FUNCTIONS
@@ -1220,6 +1266,8 @@ export default defineComponent({
       getFacilityImage,
       ctaInsertionIndex,
       openAddFacilityDialog,
+      isMapExpanded,
+      toggleMapExpand,
     };
   },
 });
@@ -1507,6 +1555,38 @@ a:hover {
     height: 100%;
     border-radius: 12px;
   }
+}
+
+/* Expanded state dimensions */
+.main-layout-container.is-map-expanded {
+  min-height: 85vh;
+
+  .map-locations {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .map-locations,
+  .basemap {
+    min-height: 85vh;
+  }
+}
+
+/* Custom Control Style Alignments */
+:deep(.custom-max-btn) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  width: 29px;
+  height: 29px;
+}
+
+:deep(.custom-max-btn svg) {
+  width: 18px;
+  height: 18px;
+  fill: #333333;
 }
 
 .muted {

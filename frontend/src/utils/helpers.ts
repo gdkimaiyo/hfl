@@ -82,3 +82,52 @@ export const getErrorMessage = (err: unknown): string => {
   }
   return err instanceof Error ? err.message : "An unexpected error occurred.";
 };
+
+// Toggle map icons
+export const FULLSCREEN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#333333"><path d="M120-120v-200h80v120h120v80H120Zm520 0v-80h120v-120h80v200H640ZM120-640v-200h200v80H200v120h-80Zm640 0v-120H640v-80h200v200h-80Z"/></svg>`;
+export const FULLSCREEN_EXIT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#333333"><path d="M240-240v-120h-120v-80h200v200h-80Zm400 0v-200h200v80H720v120h-80ZM120-640v-80h120v-120h80v200H120Zm520 0v-200h80v120h120v80H640Z"/></svg>`;
+// Accept a reactive toggle callback from Vue
+// Define the Custom Control Class with TypeScript Types
+export class MaximizeControl implements mapboxgl.IControl {
+  private _map: mapboxgl.Map | undefined;
+  private _container!: HTMLDivElement;
+  private _button!: HTMLButtonElement;
+  private _onToggle: () => void;
+
+  constructor(onToggle: () => void) {
+    this._onToggle = onToggle;
+  }
+
+  onAdd(map: mapboxgl.Map): HTMLElement {
+    this._map = map;
+
+    this._container = document.createElement("div");
+    this._container.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+
+    this._button = document.createElement("button");
+    this._button.type = "button";
+    this._button.className = "mapboxgl-ctrl-icon custom-max-btn";
+    this._button.setAttribute("aria-label", "Maximize map");
+    this._button.innerHTML = FULLSCREEN_SVG;
+
+    this._button.onclick = () => {
+      this._onToggle();
+    };
+
+    this._container.appendChild(this._button);
+    return this._container;
+  }
+
+  updateIcon(isMaximized: boolean): void {
+    if (!this._button) return;
+    this._button.innerHTML = isMaximized ? FULLSCREEN_EXIT_SVG : FULLSCREEN_SVG;
+    this._button.setAttribute("aria-label", isMaximized ? "Minimize map" : "Maximize map");
+  }
+
+  onRemove(): void {
+    if (this._container && this._container.parentNode) {
+      this._container.parentNode.removeChild(this._container);
+    }
+    this._map = undefined;
+  }
+}
