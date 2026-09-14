@@ -1,6 +1,7 @@
 <template>
   <q-page class="column q-pb-xl">
     <FacilitiesHeroSection />
+    <StatsSection />
 
     <div class="main-page q-pa-md q-mt-sm">
       <div class="text-h5">Facilities</div>
@@ -19,12 +20,14 @@ import { defineComponent } from "vue";
 
 // Components
 import FacilitiesHeroSection from "../components/facilities/FacilitiesHeroSection.vue";
+import StatsSection from "../components/home/StatsSection.vue";
 
 export default defineComponent({
   name: "FacilitiesPage",
 
   components: {
     FacilitiesHeroSection,
+    StatsSection,
   },
 });
 </script>

@@ -50,7 +50,7 @@ export default defineComponent({
 .hero-section {
   // background: linear-gradient(135deg, #0d1441 0%, #2233a1 100%);
   padding: 24px;
-  height: 65vh;
+  height: 73vh;
 
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.6) 100%),

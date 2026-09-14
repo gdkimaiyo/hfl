@@ -1,4 +1,3 @@
-<!-- FacilitiesNearMe.vue -->
 <template>
   <div id="facilities-near-me" ref="#facilities-near-me" class="main-page">
     <!-- Initial Loading State ONLY (First mount / Map Bootstrap) -->
@@ -418,8 +417,8 @@
                   </div>
 
                   <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
-                    List your clinic, hospital, or diagnostic center on our platform to help
-                    patients find your services and get real-time directions.
+                    List your clinic, hospital or diagnostic center on our platform to help patients
+                    find your services and get real-time directions.
                   </p>
 
                   <q-btn
@@ -712,13 +711,13 @@ export default defineComponent({
         const matchesDistance =
           props.distance === undefined || props.distance <= selectedFilterRadius.value;
 
-        // Ownership Filter ('both', 'public', or 'private')
+        // Ownership Filter ('both', 'public' or 'private')
         const matchesOwnership =
           selectedOwnership.value === "both" ||
           (selectedOwnership.value === "private" && props.isPrivate === true) ||
           (selectedOwnership.value === "public" && props.isPrivate === false);
 
-        // Facility Type Filter ('', 'hospital', or 'health-centre')
+        // Facility Type Filter ('', 'hospital' or 'health-centre')
         const matchesHospitalType = computedHospitalTypeMatch(
           props.type,
           selectedHospitalType.value,
@@ -878,7 +877,6 @@ export default defineComponent({
         map.value.addControl(nav, "top-right");
 
         // Add custom maximize control with callback handler
-        console.log(isHandset());
         if (!isHandset()) {
           // maxControlInstance = new MaximizeControl(toggleMapExpand);
           maxControlInstance = new MaximizeControl(() => {
@@ -1267,7 +1265,6 @@ export default defineComponent({
       ctaInsertionIndex,
       openAddFacilityDialog,
       isMapExpanded,
-      toggleMapExpand,
     };
   },
 });
