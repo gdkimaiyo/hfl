@@ -48,9 +48,14 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .hero-section {
-  background: linear-gradient(135deg, #0d1441 0%, #2233a1 100%);
+  // background: linear-gradient(135deg, #0d1441 0%, #2233a1 100%);
   padding: 24px;
   height: 65vh;
+
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.6) 100%),
+    url("../../assets/facilities/materkenya.png") center/cover no-repeat;
+  // url("../../assets/facilities/national-cancer-institute.jpg") center/cover no-repeat;
 
   .hero-content {
     width: 100%;
