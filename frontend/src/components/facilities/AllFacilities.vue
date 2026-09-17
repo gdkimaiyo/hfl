@@ -1,0 +1,1701 @@
+<template>
+  <div id="all-facilities" ref="#all-facilities" class="main-page">
+    <!-- Initial Loading State ONLY (First mount / Map Bootstrap) -->
+    <div
+      v-if="(isLocating && !map) || (isLoading && !map)"
+      id="map-section"
+      ref="mapSection"
+      class="skeleton-workspace"
+    >
+      <header class="top-header-section q-mb-md">
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">All Facilities</div>
+
+        <div class="filters q-py-sm row items-center gap-xs justify-between">
+          <div class="row">
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+          </div>
+          <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+        </div>
+
+        <q-skeleton type="text" width="50%" height="18px" animation="wave" class="q-mt-xs" />
+      </header>
+
+      <q-separator class="q-mb-md" />
+
+      <main class="section main-layout-container" :class="layoutClasses">
+        <aside class="side-content">
+          <div class="listings">
+            <div v-for="dummy in 3" :key="'skeleton-card-' + dummy" class="item">
+              <div class="image-wrapper">
+                <q-skeleton type="rect" height="250px" class="rounded-borders" animation="wave" />
+              </div>
+
+              <div class="after-img-content">
+                <q-skeleton
+                  type="text"
+                  height="24px"
+                  width="80%"
+                  animation="wave"
+                  class="q-mb-xs"
+                />
+                <q-skeleton
+                  type="text"
+                  height="16px"
+                  width="55%"
+                  animation="wave"
+                  class="q-mb-xs"
+                />
+                <q-skeleton
+                  type="text"
+                  height="16px"
+                  width="40%"
+                  animation="wave"
+                  class="q-mb-sm"
+                />
+
+                <div class="row q-gutter-xs q-my-xs">
+                  <q-skeleton type="QBadge" width="50px" height="20px" animation="wave" />
+                  <q-skeleton type="QBadge" width="75px" height="20px" animation="wave" />
+                </div>
+
+                <div class="row items-center justify-between pt-xs q-mt-md">
+                  <q-skeleton type="text" width="30%" height="18px" animation="wave" />
+                  <q-skeleton
+                    type="QBtn"
+                    width="90px"
+                    height="32px"
+                    animation="wave"
+                    class="skeleton-pill-btn"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="map-locations">
+          <q-skeleton type="rect" height="100%" animation="wave" class="basemap-skeleton" />
+        </section>
+      </main>
+    </div>
+
+    <div v-else id="map-section" ref="#map-section">
+      <header class="top-header-section q-mb-md">
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">All Facilities</div>
+
+        <!-- Filters Bar -->
+        <div class="filters q-py-sm row items-center justify-between">
+          <template v-if="userLocation">
+            <div class="row">
+              <!-- Ownership Filters -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn"
+                :class="{ selected: selectedOwnership === 'public' }"
+                label="Public"
+                @click="handleOwnershipFilter('public')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleOwnershipFilter('both')"
+                  v-if="selectedOwnership === 'public'"
+                />
+              </q-btn>
+
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn"
+                :class="{ selected: selectedOwnership === 'private' }"
+                label="Private"
+                @click="handleOwnershipFilter('private')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleOwnershipFilter('both')"
+                  v-if="selectedOwnership === 'private'"
+                />
+              </q-btn>
+
+              <q-separator vertical class="q-mx-xs gt-xs" />
+
+              <!-- Facility Type Filters -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ml-sm"
+                :class="{ selected: selectedHospitalType === 'hospital' }"
+                label="Hospital"
+                @click="handleHospitalTypeFilter('hospital')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleHospitalTypeFilter('')"
+                  v-if="selectedHospitalType === 'hospital'"
+                />
+              </q-btn>
+
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn"
+                :class="{ selected: selectedHospitalType === 'health-centre' }"
+                label="Health Centre"
+                @click="handleHospitalTypeFilter('health-centre')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleHospitalTypeFilter('')"
+                  v-if="selectedHospitalType === 'health-centre'"
+                />
+              </q-btn>
+
+              <q-separator vertical class="q-mx-xs gt-xs" />
+
+              <!-- City Filters -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ml-sm"
+                :class="{ selected: selectedCity === 'Nairobi' }"
+                label="Nairobi"
+                @click="handleCityFilter('Nairobi')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedCity === "Nairobi" ? "Showing" : "Show" }} facilities in Nairobi
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleCityFilter('all')"
+                  v-if="selectedCity === 'Nairobi'"
+                />
+              </q-btn>
+
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn"
+                :class="{ selected: selectedCity === 'Eldoret' }"
+                label="Eldoret"
+                @click="handleCityFilter('Eldoret')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedCity === "Eldoret" ? "Showing" : "Show" }} facilities in Eldoret
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleCityFilter('all')"
+                  v-if="selectedCity === 'Eldoret'"
+                />
+              </q-btn>
+
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn"
+                :class="{ selected: selectedCity === 'Kisumu' }"
+                label="Kisumu"
+                @click="handleCityFilter('Kisumu')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedCity === "Kisumu" ? "Showing" : "Show" }} facilities in Kisumu
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleCityFilter('all')"
+                  v-if="selectedCity === 'Kisumu'"
+                />
+              </q-btn>
+            </div>
+          </template>
+
+          <template v-else>
+            <q-banner
+              v-if="!isLocating"
+              dense
+              inline-actions
+              class="bg-amber-1 text-amber-10 rounded-borders text-caption"
+            >
+              <template #avatar>
+                <q-icon name="location_off" color="amber-9" size="xs" />
+              </template>
+              Location disabled — showing top facilities in Kenya.
+            </q-banner>
+          </template>
+
+          <q-btn
+            unelevated
+            rounded
+            no-caps
+            color="primary"
+            class="filter-btn q-ml-md"
+            @click="toggleListingsView"
+          >
+            <q-icon
+              :name="isMapVisible ? 'format_list_bulleted' : 'map'"
+              size="14px"
+              class="q-mr-xs"
+            />
+            <span>{{ isMapVisible ? "List View" : "Map View" }}</span>
+
+            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+              Switch to {{ isMapVisible ? "list" : "interactive map" }} view
+            </q-tooltip>
+          </q-btn>
+        </div>
+
+        <!-- Helpful Tip Bar -->
+        <div class="info text-caption text-grey-7 flex items-center q-mt-xs">
+          <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
+          Click on any facility card or map marker to draw a navigation route.
+        </div>
+      </header>
+
+      <!-- <q-separator spaced /> -->
+      <q-separator class="q-mb-md" />
+
+      <main class="section main-layout-container" :class="layoutClasses">
+        <section v-show="!isMapExpanded" class="side-content">
+          <!-- <div class="side-header">
+            <h1>Facilities ({{ displayedFacilities.length }})</h1>
+          </div> -->
+
+          <!-- Fetch facilities error -->
+          <div
+            v-if="
+              fetchFacilitiesError && (!displayedFacilities || displayedFacilities.length === 0)
+            "
+            class="error-container q-pa-lg text-center"
+          >
+            <q-icon name="signal_wifi_off" size="48px" class="muted q-mb-sm" />
+            <div class="text-subtitle1 text-bold text-negative q-mb-xs">
+              Failed to load facilities
+            </div>
+            <div class="text-caption text-grey-7 q-mb-md">
+              {{ getErrorMessage(fetchFacilitiesError) }}
+            </div>
+            <q-btn
+              rounded
+              unelevated
+              color="primary"
+              icon="refresh"
+              label="Retry"
+              @click="handleRetry()"
+            />
+          </div>
+
+          <!-- EMPTY STATE => No facilities after applying filter -->
+          <div
+            v-if="!fetchFacilitiesError && !isFetching && displayedFacilities.length === 0"
+            class="empty-state-container q-pa-lg text-center"
+          >
+            <div class="q-mb-xl">
+              <q-icon name="domain_disabled" size="56px" color="grey-5" class="q-mb-sm" />
+              <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">No facilities found</div>
+              <div class="text-caption text-grey-6 q-mb-md text-center style-max-width">
+                We couldn't find any facilities matching your current filter criteria. <br />
+                Try another filter or reset.
+              </div>
+              <q-btn
+                outline
+                rounded
+                no-caps
+                color="primary"
+                icon="tune"
+                label="Reset Filters"
+                @click="resetFilters()"
+              />
+            </div>
+
+            <q-separator spaced />
+
+            <!-- CTA Card Standalone -->
+            <div
+              class="item-cta standalone-cta flex flex-center column q-pa-lg text-center q-mt-xl"
+              @click.stop="openAddFacilityDialog()"
+            >
+              <div class="cta-icon-wrapper q-mb-sm">
+                <q-icon name="add_business" size="28px" color="primary" />
+              </div>
+
+              <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                Owner of a healthcare facility?
+              </div>
+
+              <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
+                <!-- If your health facility is located here but missing from our directory, submit
+                  your facility details and the facility will be added. -->
+                List your clinic, hospital or diagnostic center on our platform to help patients
+                find your services and get real-time directions.
+              </p>
+
+              <q-btn
+                unelevated
+                rounded
+                no-caps
+                color="primary"
+                icon="add"
+                label="Add Facility"
+                class="q-px-md"
+                @click.stop="openAddFacilityDialog()"
+              />
+            </div>
+          </div>
+
+          <div
+            id="listings"
+            class="listings"
+            :style="{ opacity: isFetching ? '0.6' : '1', transition: 'opacity 0.2s' }"
+          >
+            <template v-if="displayedFacilities && displayedFacilities.length > 0">
+              <div v-for="(facility, index) in displayedFacilities" :key="facility.properties.id">
+                <div
+                  :id="'listing-' + facility.properties.id"
+                  class="item"
+                  :class="{ 'is-selected': selectedFacility === facility.properties.id }"
+                  @click="showFacility(facility.properties.id ?? 0)"
+                >
+                  <div class="image-wrapper">
+                    <q-img
+                      alt="Facility Image"
+                      :src="getFacilityImage(facility.properties.image)"
+                      height="250px"
+                      class="rounded-borders facility-img"
+                      fit="cover"
+                    >
+                      <template #loading>
+                        <q-spinner color="primary" size="20px" />
+                      </template>
+                    </q-img>
+                  </div>
+
+                  <div class="after-img-content">
+                    <div
+                      :id="'link-' + facility.properties.id"
+                      class="title text-subtitle1 text-bold"
+                      :class="{ active: selectedFacility === facility.properties.id }"
+                      @mouseenter="hoverFacility(facility.properties.id ?? 0)"
+                    >
+                      {{ facility.properties.name }}
+                    </div>
+
+                    <div
+                      v-if="facility.properties.address"
+                      class="text-caption text-grey-7 q-mb-xs flex items-center"
+                    >
+                      <q-icon name="place" size="13px" class="q-mr-xs" />
+                      {{ facility.properties.address }}
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div
+                      v-if="facility.properties.phone || facility.properties.email"
+                      class="text-caption text-grey-8 q-mb-xs flex items-center wrap gap-xs"
+                    >
+                      <span v-if="facility.properties.phone" class="flex items-center" @click.stop>
+                        <q-icon name="phone" size="12px" class="q-mr-xs text-grey-6" />
+                        {{ facility.properties.phone.split("/")[0] }}
+                      </span>
+                      <span
+                        v-if="facility.properties.phone && facility.properties.email"
+                        class="text-grey-4 q-mx-sm"
+                        >•</span
+                      >
+                      <span v-if="facility.properties.email" class="flex items-center">
+                        <q-icon name="email" size="12px" class="q-mr-xs text-grey-6" />
+                        <a :href="`mailto:${facility.properties.email}`" class="email" @click.stop>
+                          {{ facility.properties.email }}
+                        </a>
+                      </span>
+                    </div>
+
+                    <!-- Facility Badges -->
+                    <div class="row q-gutter-xs q-mt-xs q-mb-md">
+                      <q-badge
+                        unelevated
+                        :color="facility.properties.isPrivate ? 'deep-orange-1' : 'teal-1'"
+                        :text-color="facility.properties.isPrivate ? 'deep-orange-9' : 'teal-9'"
+                        class="text-caption text-weight-medium"
+                      >
+                        {{ facility.properties.isPrivate ? "Private" : "Public" }}
+                      </q-badge>
+                      <q-badge outline color="primary" class="text-caption text-weight-medium">
+                        {{ facility.properties.type === "Hospital" ? "Hospital" : "Health Centre" }}
+                      </q-badge>
+                    </div>
+
+                    <!-- Distance and Actions Footer -->
+                    <div class="row items-center justify-between text-primary text-bold pt-xs">
+                      <div
+                        v-if="facility.properties.distance !== undefined"
+                        class="flex items-center text-caption text-weight-bold"
+                      >
+                        <q-icon name="directions_car" size="14px" class="q-mr-xs" />
+                        {{ facility.properties.distance }} km away
+                      </div>
+                      <div class="q-mb-md">
+                        <q-btn
+                          flat
+                          rounded
+                          no-caps
+                          class="facility-card-action-btn"
+                          size="sm"
+                          @click.stop
+                        >
+                          Services
+                          <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
+                        </q-btn>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Inline CTA Card -->
+                <div
+                  v-if="index === ctaInsertionIndex"
+                  class="item-cta shadow-1 flex flex-center column q-pa-lg text-center"
+                  @click.stop="openAddFacilityDialog"
+                >
+                  <div class="cta-icon-wrapper q-mb-sm">
+                    <q-icon name="add_business" size="28px" color="primary" />
+                  </div>
+
+                  <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                    Are you a Healthcare Provider?
+                  </div>
+
+                  <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
+                    List your clinic, hospital or diagnostic center on our platform to help patients
+                    find your services and get real-time directions.
+                  </p>
+
+                  <q-btn
+                    unelevated
+                    rounded
+                    no-caps
+                    color="primary"
+                    icon="add"
+                    label="Add Facility"
+                    class="q-px-md"
+                    @click.stop="openAddFacilityDialog()"
+                  />
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="isFetching">
+              <div v-for="dummy in 3" :key="dummy" class="item q-mb-md">
+                <div class="image-wrapper">
+                  <q-skeleton type="rect" height="250px" class="rounded-borders" animation="wave" />
+                </div>
+
+                <div class="after-img-content">
+                  <q-skeleton
+                    type="text"
+                    height="24px"
+                    width="80%"
+                    animation="wave"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    height="16px"
+                    width="55%"
+                    animation="wave"
+                    class="q-mb-xs"
+                  />
+                  <q-skeleton
+                    type="text"
+                    height="16px"
+                    width="40%"
+                    animation="wave"
+                    class="q-mb-sm"
+                  />
+
+                  <div class="row q-gutter-xs q-my-xs">
+                    <q-skeleton type="QBadge" width="50px" height="20px" animation="wave" />
+                    <q-skeleton type="QBadge" width="75px" height="20px" animation="wave" />
+                  </div>
+
+                  <div class="row items-center justify-between pt-xs q-mt-md">
+                    <q-skeleton type="text" width="30%" height="18px" animation="wave" />
+                    <q-skeleton
+                      type="QBtn"
+                      width="90px"
+                      height="32px"
+                      animation="wave"
+                      class="skeleton-pill-btn"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- RIGHT CONTENT: Sticky Map -->
+        <section class="map-locations">
+          <div id="mapContainer" class="basemap"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import {
+  defineComponent,
+  ref,
+  computed,
+  onUnmounted,
+  shallowRef,
+  onMounted,
+  nextTick,
+  watch,
+} from "vue";
+import { Notify } from "quasar";
+import { useRouter } from "vue-router";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { useQuery } from "@tanstack/vue-query";
+
+import { MAPBOX_TOKEN } from "../../secrets.config";
+
+// Services
+import { getAllFacilities } from "../../services/facility.service";
+
+// Types
+import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
+
+// Utils / Helpers / Constants
+import {
+  createPopUp,
+  getErrorMessage,
+  getFacilityImage,
+  isHandset,
+  MaximizeControl,
+} from "../../utils/helpers";
+
+export default defineComponent({
+  name: "AllFacilities",
+
+  setup() {
+    const accessToken = ref(MAPBOX_TOKEN);
+    const selectedFacility = ref<number | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const map = shallowRef<any>(null);
+    const markersRef = shallowRef<mapboxgl.Marker[]>([]);
+    const userLocation = ref<[number, number] | null>(null);
+    const isLocating = ref<boolean>(true);
+
+    const isMapExpanded = ref<boolean>(false);
+    const isMapVisible = ref<boolean>(false);
+    let maxControlInstance: MaximizeControl | null = null;
+
+    const router = useRouter();
+    // const $q = useQuasar();
+
+    // Public or Private
+    const selectedOwnership = ref<string>("both");
+    // Hospital Type
+    const selectedHospitalType = ref<string>("");
+    // City/Town Filter
+    const selectedCity = ref<string>("all");
+
+    const hoveredFacilityId = ref<number | null>(null);
+
+    // GET DEVICE LOCATION
+    const locateUser = () => {
+      return new Promise<void>((resolve) => {
+        if (!navigator.geolocation) {
+          Notify.create({ type: "warning", message: "Geolocation not supported by browser." });
+          return resolve();
+        }
+
+        isLocating.value = true;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLocation.value = [pos.coords.longitude, pos.coords.latitude];
+            isLocating.value = false;
+            resolve();
+          },
+          (error) => {
+            console.warn("Geolocation error:", error.message);
+            isLocating.value = false;
+            resolve();
+          },
+          { enableHighAccuracy: true, timeout: 8000 },
+        );
+      });
+    };
+
+    // VUE QUERY
+    const {
+      data: rawFacilities,
+      isLoading,
+      isFetching,
+      refetch,
+      error: fetchFacilitiesError,
+    } = useQuery<FacilityGeoJSON>({
+      queryKey: ["all-facilities"],
+      queryFn: async () => {
+        const response = await getAllFacilities();
+
+        // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
+        const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
+        const features = rawArray || []; // Fallback to empty array if something goes wrong
+
+        // Map property IDs
+        const featuresWithIds = features.map((feature: FacilityFeature, index: number) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            id: feature.properties?.id ?? index,
+            // distance: feature.properties.distance
+            //   ? Math.round(feature.properties.distance * 100) / 100
+            //   : 0,
+          },
+        }));
+
+        return {
+          type: "FeatureCollection",
+          features: featuresWithIds,
+        };
+      },
+      staleTime: Infinity,
+      gcTime: 30 * 60 * 1000,
+      enabled: false,
+      placeholderData: { type: "FeatureCollection", features: [] },
+    });
+
+    // COMPUTED
+    // LOADING STATE
+    const isInLoadingState = computed(
+      () => (isLocating.value && !map.value) || (isLoading.value && !map.value) || isFetching.value,
+    );
+
+    // CTA INDEX
+    // Position CTA card naturally within the listing items
+    const ctaInsertionIndex = computed(() => {
+      const total = displayedFacilities.value.length;
+      if (total === 0) return -1;
+      if (total <= 3) return 0; // After the 1st item (index 0)
+      if (total === 4) return 2; // After the 3rd item (index 2)
+
+      // For larger lists (>4), place it at ~40% down the list
+      return Math.floor(total * 0.4) - 1;
+    });
+
+    // IN-MEMORY FILTERED LIST
+    const displayedFacilities = computed<FacilityFeature[]>(() => {
+      const allFeatures = rawFacilities.value?.features || [];
+
+      return allFeatures.filter((facility) => {
+        const props = facility.properties;
+
+        // Ownership Filter ('both', 'public' or 'private')
+        const matchesOwnership =
+          selectedOwnership.value === "both" ||
+          (selectedOwnership.value === "private" && props.isPrivate === true) ||
+          (selectedOwnership.value === "public" && props.isPrivate === false);
+
+        // Facility Type Filter ('', 'hospital' or 'health-centre')
+        const matchesHospitalType = computedHospitalTypeMatch(
+          props.type,
+          selectedHospitalType.value,
+        );
+
+        // City / Town Filter
+        const matchesSelectedCity =
+          selectedCity.value === "all" ||
+          selectedCity.value.toLocaleLowerCase() == props.city.toLocaleLowerCase();
+
+        return matchesOwnership && matchesHospitalType && matchesSelectedCity;
+      });
+    });
+
+    // Reactive Layout Classes
+    const layoutClasses = computed(() => ({
+      "is-map-expanded": isMapExpanded.value,
+      "is-list-view": !isMapVisible.value,
+    }));
+
+    // FILTER HANDLERS
+    const handleOwnershipFilter = (filter: string) => {
+      selectedOwnership.value = filter;
+    };
+
+    const handleHospitalTypeFilter = (filter: string) => {
+      selectedHospitalType.value = filter;
+    };
+
+    const handleCityFilter = (filter: string) => {
+      selectedCity.value = filter;
+    };
+
+    // MAP INTERACTION
+    const showFacility = (facilityId: number) => {
+      if (isHandset()) {
+        void router.push({ name: "home", hash: "#map-section" });
+      }
+      selectedFacility.value = facilityId;
+
+      const targetFacility = displayedFacilities.value.find(
+        (facility) => facility.properties.id === facilityId,
+      );
+
+      if (!targetFacility) return;
+
+      flyToFacility(targetFacility);
+      createPopUp(targetFacility, map);
+
+      if (userLocation.value) {
+        // void drawRoute(facility.geometry.coordinates);
+        // Alternative
+        drawRoute(targetFacility.geometry.coordinates).catch((err) => {
+          console.error("Failed to fetch route:", err);
+        });
+      }
+    };
+
+    // Triggered when a user hovers over a facility item in the list.
+    // Displays the map popup and focuses the facility without drawing routes.
+    const hoverFacility = (facilityId: number) => {
+      if (hoveredFacilityId.value === facilityId) return;
+
+      hoveredFacilityId.value = facilityId;
+
+      const targetFacility = displayedFacilities.value.find(
+        (facility) => facility.properties.id === facilityId,
+      );
+
+      if (targetFacility) {
+        createPopUp(targetFacility, map);
+        flyToFacility(targetFacility);
+      }
+    };
+
+    // MAPBOX INITIALIZATION
+    const mapboxMap = (data: FacilityFeature[]) => {
+      mapboxgl.accessToken = accessToken.value;
+
+      if (map.value) return;
+
+      // Center on user location if available, otherwise default to Nairobi CBD
+      const initialCenter = userLocation.value || [36.81868966807952, -1.2860949419582617];
+
+      map.value = new mapboxgl.Map({
+        container: "mapContainer",
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: initialCenter,
+        zoom: 12,
+        scrollZoom: false,
+      });
+
+      map.value.on("load", () => {
+        if (!map.value) return;
+
+        // Add source for the route line
+        map.value.addSource("route", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "LineString", coordinates: [] },
+          },
+        });
+
+        // Add layer for displaying the route line
+        map.value.addLayer({
+          id: "route",
+          type: "line",
+          source: "route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: { "line-color": "#0d1441", "line-width": 5, "line-opacity": 0.8 },
+        });
+
+        // Add User Pulse Location Marker if geolocated
+        if (userLocation.value) {
+          const userEl = document.createElement("div");
+          userEl.className = "user-location-marker";
+          new mapboxgl.Marker(userEl).setLngLat(userLocation.value).addTo(map.value);
+        }
+
+        // Standard navigation controls
+        const nav = new mapboxgl.NavigationControl();
+        map.value.addControl(nav, "top-right");
+
+        // Add custom maximize control with callback handler
+        if (!isHandset()) {
+          // maxControlInstance = new MaximizeControl(toggleMapExpand);
+          maxControlInstance = new MaximizeControl(() => {
+            void toggleMapExpand();
+          });
+          map.value.addControl(maxControlInstance, "top-left");
+        }
+
+        // if (userLocation.value) fitMapToVisibleFacilities(data);
+        addMarkers(data);
+      });
+    };
+
+    // RENDER / RE-RENDER MARKERS ON FILTER CHANGES
+    const addMarkers = (features: FacilityFeature[]) => {
+      if (!map.value) return;
+
+      // Remove active markers from Mapbox map instance & clear array
+      markersRef.value.forEach((marker) => marker.remove());
+      const newMarkers: mapboxgl.Marker[] = [];
+
+      features.forEach((marker) => {
+        const el = document.createElement("div");
+        el.id = `marker-${marker.properties.id}`;
+        el.className = "marker";
+
+        const markerInstance = new mapboxgl.Marker(el, { offset: [0, -23] })
+          .setLngLat(marker.geometry.coordinates)
+          .addTo(map.value);
+
+        // Track new marker instance
+        newMarkers.push(markerInstance);
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          flyToFacility(marker);
+          selectedFacility.value = marker.properties.id ?? null;
+
+          if (userLocation.value) {
+            // void drawRoute(marker.geometry.coordinates);
+
+            // Alternative
+            drawRoute(marker.geometry.coordinates).catch((err) => {
+              console.error("Failed to fetch route:", err);
+            });
+          }
+        });
+
+        el.addEventListener("mouseover", (e) => {
+          e.stopPropagation();
+          createPopUp(marker, map);
+        });
+
+        el.addEventListener("mouseleave", () => {
+          const mapContainer = document.getElementById("mapContainer");
+          if (mapContainer) {
+            const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
+            Array.from(popUps).forEach((popup) => popup.remove());
+          }
+        });
+      });
+
+      // Update reference array
+      markersRef.value = newMarkers;
+    };
+
+    // FETCH AND DRAW MAPBOX ROUTE LINE
+    const drawRoute = async (destinationLngLat: [number, number]) => {
+      if (!userLocation.value || !map.value) return;
+
+      const query = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.value[0]},${userLocation.value[1]};${destinationLngLat[0]},${destinationLngLat[1]}?steps=true&geometries=geojson&access_token=${accessToken.value}`,
+      );
+      const json = await query.json();
+      const routeData = json.routes[0]?.geometry;
+
+      if (routeData && map.value.getSource("route")) {
+        map.value.getSource("route").setData({
+          type: "Feature",
+          properties: {},
+          geometry: routeData,
+        });
+
+        // Fit map bounds to view both user location and facility
+        const bounds = new mapboxgl.LngLatBounds();
+        bounds.extend(userLocation.value);
+        bounds.extend(destinationLngLat);
+        map.value.fitBounds(bounds, { padding: 60 });
+      }
+    };
+
+    const flyToFacility = (currentFeature: FacilityFeature) => {
+      map.value?.flyTo({
+        center: currentFeature.geometry.coordinates,
+        zoom: 13,
+      });
+    };
+
+    // Fit map viewport around all currently rendered/displayed facilities
+    // const fitMapToVisibleFacilities = (features: FacilityFeature[]) => {
+    //   if (!map.value || features.length === 0) return;
+
+    //   const bounds = new mapboxgl.LngLatBounds();
+
+    //   // Always include user location in bounds calculation if present
+    //   if (userLocation.value) {
+    //     bounds.extend(userLocation.value);
+    //   }
+
+    //   // Extend bounds to encompass every visible facility marker
+    //   features.forEach((facility) => {
+    //     bounds.extend(facility.geometry.coordinates);
+    //   });
+
+    //   map.value.fitBounds(bounds, {
+    //     padding: { top: 70, bottom: 70, left: 70, right: 70 },
+    //     maxZoom: 14, // Prevents over-zooming when only 1 facility exists close to user
+    //     duration: 1000, // Smooth 1-second transition animation
+    //   });
+    // };
+
+    const handleRetry = async () => {
+      try {
+        const result = await refetch();
+
+        if (result.data && result.data.features.length > 0) {
+          await initializeMap(displayedFacilities.value);
+        }
+      } catch (err) {
+        console.error("Retry failed:", err);
+      }
+    };
+
+    const resetFilters = () => {
+      selectedOwnership.value = "both";
+      selectedHospitalType.value = "";
+      selectedCity.value = "all";
+    };
+
+    const openAddFacilityDialog = () => {
+      console.log("Open Add Facility Modal");
+      // Open Add Facility Modal
+    };
+
+    const toggleMapExpand = async () => {
+      isMapExpanded.value = !isMapExpanded.value;
+
+      // Update control button icon
+      if (maxControlInstance) {
+        maxControlInstance.updateIcon(isMapExpanded.value);
+      }
+
+      // Dynamically enable scrollZoom when expanded, disable when collapsed
+      if (map.value) {
+        if (isMapExpanded.value) {
+          map.value.scrollZoom.enable();
+        } else {
+          map.value.scrollZoom.disable();
+        }
+      }
+
+      // Wait for Vue template to hide sidebar & expand container width/height
+      await nextTick();
+
+      // Force Mapbox WebGL viewport recalculation
+      if (map.value) {
+        map.value.resize();
+      }
+    };
+
+    const toggleListingsView = async () => {
+      isMapVisible.value = !isMapVisible.value;
+
+      if (isMapVisible.value) {
+        await nextTick();
+
+        // Force Mapbox WebGL viewport recalculation
+        if (map.value) {
+          map.value.resize();
+        }
+      }
+    };
+
+    // HELPER FUNCTIONS
+    const computedHospitalTypeMatch = (
+      facilityType: string | undefined,
+      selectedType: string,
+    ): boolean => {
+      if (!selectedType) return true;
+
+      const normalizedFacilityType = (facilityType || "").toLowerCase().replace(/[\s-_]/g, "");
+      const normalizedSelectedType = selectedType.toLowerCase().replace(/[\s-_]/g, "");
+
+      return normalizedFacilityType.includes(normalizedSelectedType);
+    };
+
+    const initializeMap = async (data: FacilityFeature[]) => {
+      await nextTick();
+
+      if (document.getElementById("mapContainer")) {
+        // If map instance already exists, resize it; otherwise create it
+        if (map.value) {
+          map.value.resize();
+        } else {
+          mapboxMap(data);
+        }
+      } else {
+        // If DOM node isn't ready yet, wait until loading completes
+        const unwatch = watch(isInLoadingState, async (loading) => {
+          if (!loading) {
+            await nextTick();
+            if (document.getElementById("mapContainer")) {
+              mapboxMap(data);
+            }
+            unwatch();
+          }
+        });
+      }
+    };
+
+    watch(displayedFacilities, (newFeatures) => {
+      if (map.value) {
+        addMarkers(newFeatures);
+        // if (userLocation.value) fitMapToVisibleFacilities(newFeatures);
+      }
+    });
+
+    watch(fetchFacilitiesError, (newError) => {
+      if (newError) {
+        console.error("Facility Query Error:", newError);
+
+        // Notify.create({
+        //   type: "negative",
+        //   message: getErrorMessage(newError),
+        //   icon: "error",
+        //   timeout: 7000,
+        //   actions: [{ label: "Retry", color: "white", handler: () => void refetch() }],
+        // });
+
+        // $q.notify({
+        //   type: "negative",
+        //   message: getErrorMessage(newError),
+        //   icon: "error",
+        //   timeout: 7000,
+        //   actions: [
+        //     {
+        //       label: "Retry",
+        //       color: "white",
+        //       handler: () => void refetch(),
+        //     },
+        //   ],
+        // });
+      }
+    });
+
+    onMounted(async () => {
+      await locateUser();
+
+      try {
+        const result = await refetch();
+
+        if (result.data && result.data.features.length > 0) {
+          await initializeMap(displayedFacilities.value);
+        }
+      } catch (error) {
+        console.error("Failed mounting AllFacilitie:", error);
+        Notify.create({
+          type: "negative",
+          message: "Unable to load all facilities.",
+          group: false,
+          timeout: 5000,
+        });
+      }
+    });
+
+    onUnmounted(() => {
+      map.value?.remove();
+    });
+
+    return {
+      accessToken,
+      selectedFacility,
+      displayedFacilities,
+      map,
+      isLoading,
+      isFetching,
+      isLocating,
+      userLocation,
+      showFacility,
+      hoverFacility,
+      handleRetry,
+      resetFilters,
+      getErrorMessage,
+      fetchFacilitiesError,
+      selectedOwnership,
+      selectedHospitalType,
+      selectedCity,
+      handleOwnershipFilter,
+      handleHospitalTypeFilter,
+      handleCityFilter,
+      getFacilityImage,
+      ctaInsertionIndex,
+      openAddFacilityDialog,
+      isMapExpanded,
+      isMapVisible,
+      layoutClasses,
+      toggleListingsView,
+    };
+  },
+});
+</script>
+
+<style lang="scss" scoped>
+.main-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  padding-top: 64px;
+
+  box-sizing: border-box;
+  color: #404040;
+  font:
+    400 15px/22px "Source Sans Pro",
+    "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.loader-container {
+  min-height: 50vh;
+}
+
+.page-header {
+  // margin: 0 0 12px 12px;
+  line-height: 1.2;
+}
+.info {
+  // color: #6c757d;
+  font-size: 13px;
+  padding-left: 6px;
+}
+
+:deep(.user-location-marker) {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #007cbf;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 10px rgba(0, 124, 191, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 124, 191, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 124, 191, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 124, 191, 0);
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  height: calc(100vh - 270px);
+  min-height: 600px;
+}
+
+.side-content {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  /* Thin animated progress bar pinned to the top of the sidebar */
+  .refetch-progress-bar {
+    height: 3px;
+    z-index: 10;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+
+  /* Floating, non-blocking status badge */
+  .refetch-pill {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--q-primary);
+    pointer-events: none;
+  }
+}
+
+.side-header {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  height: 60px;
+  line-height: 60px;
+  padding: 0 10px;
+
+  h1 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 400;
+    line-height: 20px;
+    padding: 20px 2px;
+  }
+}
+
+a {
+  color: #404040;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #101010;
+}
+
+.listings {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-top: 8px;
+  // transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease-in-out;
+
+  &.is-refetching {
+    opacity: 0.55;
+    pointer-events: none; /* Prevents clicks while fetching new boundaries */
+  }
+}
+
+.listings .item {
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  // border-radius: 12px;
+  padding: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    .title {
+      // color: var(--q-primary, #0d1441);
+      color: rgba(13, 20, 65, 0.7);
+    }
+  }
+}
+
+.facility-img {
+  transition: transform 0.3s ease;
+}
+
+.item:hover .facility-img {
+  transform: scale(1.01);
+}
+
+.after-img-content {
+  padding-top: 12px;
+}
+
+.listings .item .title {
+  color: #1e293b;
+  transition: color 0.2s ease;
+
+  &.active {
+    // color: var(--q-primary, #0d1441);
+    color: rgba(193, 0, 21, 0.8);
+  }
+}
+
+.facility-card-action-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 4px 14px;
+  background-color: var(--q-primary, #0d1441);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--q-primary, #0d1441);
+    opacity: 0.9;
+  }
+}
+
+/* Scrollbars */
+.listings::-webkit-scrollbar {
+  width: 5px;
+}
+.listings::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.listings::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+
+  &:hover {
+    background: #94a3b8;
+  }
+}
+
+.listings {
+  .item-cta {
+    position: relative;
+    border: 1px dashed var(--q-primary);
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 12px;
+    margin: 16px 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+
+    .cta-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(var(--q-primary-rgb), 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .item-cta-desc {
+      max-width: 290px;
+      line-height: 1.45;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    &.standalone-cta {
+      border-style: solid;
+      background: #ffffff;
+    }
+  }
+}
+
+.map-locations {
+  width: 60%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  display: block !important;
+
+  .basemap {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+  }
+}
+
+/* Expanded state dimensions */
+.main-layout-container.is-map-expanded {
+  min-height: 85vh;
+
+  .map-locations {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .map-locations,
+  .basemap {
+    min-height: 85vh;
+  }
+}
+
+/* ListView dimensions */
+.main-layout-container.is-list-view {
+  height: fit-content;
+  min-height: auto;
+  width: 100%;
+
+  .side-content {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .listings {
+    display: grid;
+    /* Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop, 4 on wide screens */
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+    width: 100%;
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr); // Default 3 across on desktop
+    }
+
+    // @media (min-width: 1440px) {
+    //   grid-template-columns: repeat(4, 1fr); // 4 across on extra-wide screens
+    // }
+
+    .item {
+      width: 100%;
+      height: 100%; /* Ensures cards stretch uniformly across rows */
+      margin: 0; /* Clear vertical margins used in single-column layout */
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    // Hide CTA while on ListView
+    .item-cta {
+      display: none;
+    }
+  }
+
+  .map-locations {
+    display: none !important;
+  }
+}
+
+/* Custom Control Style Alignments */
+:deep(.custom-max-btn) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  width: 29px;
+  height: 29px;
+}
+
+:deep(.custom-max-btn svg) {
+  width: 18px;
+  height: 18px;
+  fill: #333333;
+}
+
+.muted {
+  color: #6c757d;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Filter Button Base Styles */
+.filter-btn {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--q-primary, #0d1441);
+  background-color: #f8fafc;
+  border: 1px solid rgba(13, 20, 65, 0.18);
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  margin-right: 8px;
+
+  &:hover {
+    background-color: #f1f5f9;
+    border-color: rgba(13, 20, 65, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* Active / Selected State */
+  &.selected {
+    background-color: var(--q-primary, #0d1441);
+    color: #ffffff;
+    border-color: var(--q-primary, #0d1441);
+    // box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
+    box-shadow: 0 4px 10px rgba(13, 20, 65, 0.2);
+
+    &:hover {
+      background-color: var(--q-primary, #0d1441);
+      color: #ffffff;
+      border-color: var(--q-primary, #0d1441);
+      opacity: 0.95;
+    }
+  }
+
+  /* Muted / Zero Results State */
+  &.is-empty:not(.selected) {
+    opacity: 0.55;
+    background-color: #f1f5f9;
+    border-style: dashed;
+    // border-color: rgba(13, 20, 65, 0.15);
+
+    // &:hover {
+    //   opacity: 0.85;
+    //   border-style: dashed;
+    // }
+  }
+}
+
+/* Custom Tooltip Styling */
+.filter-tooltip {
+  background-color: rgba(13, 20, 65, 0.94) !important;
+  backdrop-filter: blur(4px);
+  color: #ffffff !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+
+  /* Refetch indicator pill inside tooltip */
+  .tooltip-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+}
+
+.email {
+  color: var(--q-primary, #0d1441);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Skeleton Utility Layout Styles */
+.skeleton-filter-pill {
+  width: 68px;
+  height: 34px;
+  border-radius: 18px !important;
+  margin-top: 8px;
+  margin-right: 8px;
+}
+
+.skeleton-pill-btn {
+  border-radius: 18px !important;
+}
+
+.basemap-skeleton {
+  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Transition for the status pill */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+}
+
+.error-container {
+  min-height: 280px;
+  width: 100%;
+  line-height: 1.4;
+}
+
+.empty-state-container {
+  min-height: 280px;
+  width: 100%;
+
+  .style-max-width {
+    max-width: 100%;
+    line-height: 1.4;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .section {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .map-locations {
+    width: 100%;
+    height: 350px;
+    order: -1; /* Move map to top on mobile viewports */
+  }
+
+  .side-content {
+    width: 100%;
+    height: auto;
+  }
+
+  .listings {
+    padding-right: 0;
+  }
+}
+</style>
