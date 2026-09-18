@@ -16,6 +16,7 @@ export const DISTANCE = [
 ];
 
 export const TOWNS = [
+  "All",
   "Nairobi",
   "Mombasa",
   "Kisumu",

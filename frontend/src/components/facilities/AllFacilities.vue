@@ -111,13 +111,13 @@
         <!-- Filters Bar -->
         <div class="filters q-py-sm row items-center justify-between">
           <template v-if="userLocation">
-            <div class="row items-center no-wrap">
+            <div class="row items-center">
               <!-- Ownership Filters -->
               <q-btn
                 flat
                 rounded
                 no-caps
-                class="filter-btn"
+                class="filter-btn q-ma-sm"
                 :class="{ selected: selectedOwnership === 'public' }"
                 label="Public"
                 @click="handleOwnershipFilter('public')"
@@ -138,7 +138,7 @@
                 flat
                 rounded
                 no-caps
-                class="filter-btn"
+                class="filter-btn q-ma-sm"
                 :class="{ selected: selectedOwnership === 'private' }"
                 label="Private"
                 @click="handleOwnershipFilter('private')"
@@ -155,14 +155,14 @@
                 />
               </q-btn>
 
-              <q-separator vertical class="q-mx-xs gt-xs" />
+              <q-separator vertical class="gt-xs" />
 
               <!-- Facility Type Filters -->
               <q-btn
                 flat
                 rounded
                 no-caps
-                class="filter-btn q-ml-sm"
+                class="filter-btn q-ma-sm"
                 :class="{ selected: selectedHospitalType === 'hospital' }"
                 label="Hospital"
                 @click="handleHospitalTypeFilter('hospital')"
@@ -183,7 +183,7 @@
                 flat
                 rounded
                 no-caps
-                class="filter-btn"
+                class="filter-btn q-ma-sm"
                 :class="{ selected: selectedHospitalType === 'health-centre' }"
                 label="Health Centre"
                 @click="handleHospitalTypeFilter('health-centre')"
@@ -200,83 +200,37 @@
                 />
               </q-btn>
 
-              <q-separator vertical class="q-mx-xs gt-xs" />
+              <q-separator vertical class="gt-xs" />
 
-              <!-- City Filters -->
-              <q-btn
-                v-for="city in majorCities"
-                :key="city"
-                flat
-                rounded
-                no-caps
-                class="filter-btn q-ml-sm"
-                :class="{ selected: selectedCity === city }"
-                :label="city"
-                @click="handleCityFilter(city)"
-              >
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{ selectedCity === city ? "Showing" : "Show" }} facilities in {{ city }}
-                </q-tooltip>
-                <q-icon
-                  v-if="selectedCity === city"
-                  name="close"
-                  size="14px"
-                  class="q-ml-xs"
-                  @click.stop="handleCityFilter('all')"
-                />
-              </q-btn>
-
-              <!-- Select Dropdown for Other Towns -->
-              <q-select
-                v-model="selectedCity"
-                :options="otherTownOptions"
-                dense
-                borderless
-                options-dense
-                emit-value
-                map-options
-                class="filter-select-btn q-ml-sm"
-                :class="{ selected: isOtherTownSelected }"
-                :display-value="selectedCityDisplayLabel"
-                @update:model-value="handleCityFilter"
-              >
-                <template #prepend>
-                  <q-icon name="location_city" size="14px" class="q-mr-xs" />
-                </template>
-
-                <template #append>
-                  <q-icon
-                    v-if="isOtherTownSelected"
-                    name="close"
-                    size="14px"
-                    class="cursor-pointer q-ml-xs"
-                    @click.stop="handleCityFilter('all')"
-                  />
-                </template>
-
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{
-                    isOtherTownSelected
-                      ? `Showing facilities in ${selectedCity}`
-                      : "Filter by other towns"
-                  }}
-                </q-tooltip>
-              </q-select>
+              <!-- City/Town Filters -->
+              <SelectTownFilter
+                :selectedCity="selectedCity"
+                :isLocationActive="userLocation ? true : false"
+                @trigger-city-filter="handleCityFilter"
+              />
             </div>
           </template>
 
           <template v-else>
-            <q-banner
-              v-if="!isLocating"
-              dense
-              inline-actions
-              class="bg-amber-1 text-amber-10 rounded-borders text-caption"
-            >
-              <template #avatar>
-                <q-icon name="location_off" color="amber-9" size="xs" />
-              </template>
-              Location disabled — showing top facilities in Kenya.
-            </q-banner>
+            <div class="column">
+              <q-banner
+                v-if="!isLocating"
+                dense
+                inline-actions
+                class="text-amber-10 rounded-borders text-caption"
+              >
+                <template #avatar>
+                  <q-icon name="location_off" color="amber-9" size="xs" />
+                </template>
+                Location disabled — showing top facilities per town.
+              </q-banner>
+
+              <!-- City/Town Filters -->
+              <SelectTownFilter
+                :selectedCity="selectedCity"
+                @trigger-city-filter="handleCityFilter"
+              />
+            </div>
           </template>
 
           <q-btn
@@ -284,7 +238,7 @@
             rounded
             no-caps
             color="primary"
-            class="filter-btn q-ml-md"
+            class="filter-btn q-ml-sm"
             @click="toggleListingsView"
           >
             <q-icon
@@ -631,10 +585,16 @@ import {
   isHandset,
   MaximizeControl,
 } from "../../utils/helpers";
-import { TOWNS } from "../../utils/constants";
+
+// Components
+import SelectTownFilter from "../shared/SelectTownFilter.vue";
 
 export default defineComponent({
   name: "AllFacilities",
+
+  components: {
+    SelectTownFilter,
+  },
 
   setup() {
     const accessToken = ref(MAPBOX_TOKEN);
@@ -657,9 +617,7 @@ export default defineComponent({
     // Hospital Type
     const selectedHospitalType = ref<string>("");
     // City/Town Filter
-    const selectedCity = ref<string>("all");
-    const majorCities = ["Nairobi", "Mombasa", "Eldoret"];
-    const ALL_TOWNS = TOWNS;
+    const selectedCity = ref<string>("All");
 
     const hoveredFacilityId = ref<number | null>(null);
 
@@ -767,30 +725,11 @@ export default defineComponent({
         // City / Town Filter
         const facilityCity = facility.properties?.city || "";
         const matchesSelectedCity =
-          selectedCity.value === "all" ||
+          selectedCity.value === "All" ||
           facilityCity.toLowerCase() === selectedCity.value.toLowerCase();
 
         return matchesOwnership && matchesHospitalType && matchesSelectedCity;
       });
-    });
-
-    // Filter options for the dropdown excluding major cities
-    const otherTownOptions = computed(() => {
-      const otherTowns = ALL_TOWNS.filter((town) => !majorCities.includes(town));
-      return [
-        { label: "Other Towns...", value: "all" },
-        ...otherTowns.map((town) => ({ label: town, value: town })),
-      ];
-    });
-
-    // Helper: Check if selected town comes from the dropdown
-    const isOtherTownSelected = computed(() => {
-      return selectedCity.value !== "all" && !majorCities.includes(selectedCity.value);
-    });
-
-    // Dynamic label for q-select button display
-    const selectedCityDisplayLabel = computed(() => {
-      return isOtherTownSelected.value ? selectedCity.value : "Other Towns";
     });
 
     // Reactive Layout Classes
@@ -1074,7 +1013,7 @@ export default defineComponent({
     const resetFilters = () => {
       selectedOwnership.value = "both";
       selectedHospitalType.value = "";
-      selectedCity.value = "all";
+      selectedCity.value = "All";
     };
 
     const openAddFacilityDialog = () => {
@@ -1158,6 +1097,7 @@ export default defineComponent({
       }
     };
 
+    // WATCHERS & LIFECYCLE
     watch(displayedFacilities, (newFeatures) => {
       if (map.value) {
         addMarkers(newFeatures);
@@ -1234,11 +1174,7 @@ export default defineComponent({
       fetchFacilitiesError,
       selectedOwnership,
       selectedHospitalType,
-      majorCities,
       selectedCity,
-      otherTownOptions,
-      isOtherTownSelected,
-      selectedCityDisplayLabel,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
       handleCityFilter,
@@ -1605,126 +1541,6 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-/* Filter Button Base Styles */
-.filter-btn {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--q-primary, #0d1441);
-  background-color: #f8fafc;
-  border: 1px solid rgba(13, 20, 65, 0.18);
-  transition: all 0.2s ease;
-  margin-top: 8px;
-  margin-right: 8px;
-
-  &:hover {
-    background-color: #f1f5f9;
-    border-color: rgba(13, 20, 65, 0.4);
-    transform: translateY(-1px);
-  }
-
-  /* Active / Selected State */
-  &.selected {
-    background-color: var(--q-primary, #0d1441);
-    color: #ffffff;
-    border-color: var(--q-primary, #0d1441);
-    // box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
-    box-shadow: 0 4px 10px rgba(13, 20, 65, 0.2);
-
-    &:hover {
-      background-color: var(--q-primary, #0d1441);
-      color: #ffffff;
-      border-color: var(--q-primary, #0d1441);
-      opacity: 0.95;
-    }
-  }
-
-  /* Muted / Zero Results State */
-  &.is-empty:not(.selected) {
-    opacity: 0.55;
-    background-color: #f1f5f9;
-    border-style: dashed;
-    // border-color: rgba(13, 20, 65, 0.15);
-
-    // &:hover {
-    //   opacity: 0.85;
-    //   border-style: dashed;
-    // }
-  }
-}
-
-/* Filter Select styling similar to Quasar flat rounded buttons */
-.filter-select-btn {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  border-radius: 28px;
-  background-color: #f1f5f9;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 500;
-  margin-top: 8px;
-  padding: 0 12px;
-  vertical-align: middle;
-
-  :deep(.q-field__inner),
-  :deep(.q-field__control),
-  :deep(.q-field__control-container) {
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 0 !important;
-    display: flex;
-    align-items: center;
-  }
-
-  :deep(.q-field__native) {
-    padding: 0;
-    min-height: unset;
-    line-height: 1;
-    color: inherit;
-    font-weight: 500;
-  }
-
-  :deep(.q-field__append),
-  :deep(.q-field__prepend) {
-    height: 36px;
-    padding: 0;
-    color: inherit;
-  }
-
-  /* Active/Selected State matching selected chip buttons */
-  &.selected {
-    background-color: var(--q-primary);
-    color: #ffffff;
-
-    :deep(.q-field__native),
-    :deep(.q-icon) {
-      color: #ffffff !important;
-    }
-  }
-}
-
-/* Custom Tooltip Styling */
-.filter-tooltip {
-  background-color: rgba(13, 20, 65, 0.94) !important;
-  backdrop-filter: blur(4px);
-  color: #ffffff !important;
-  font-size: 12px !important;
-  padding: 6px 12px !important;
-  border-radius: 6px !important;
-
-  /* Refetch indicator pill inside tooltip */
-  .tooltip-badge {
-    display: inline-flex;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
-  }
 }
 
 .email {

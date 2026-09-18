@@ -244,13 +244,20 @@
             v-if="!isLocating"
             dense
             inline-actions
-            class="bg-amber-1 text-amber-10 rounded-borders text-caption"
+            class="text-amber-10 rounded-borders text-caption"
           >
             <template #avatar>
               <q-icon name="location_off" color="amber-9" size="xs" />
             </template>
             Location disabled — showing top facilities in Kenya.
           </q-banner>
+
+          <!-- City/Town Filters -->
+          <SelectTownFilter
+            :selectedCity="selectedCity"
+            :isLocationActive="userLocation ? true : false"
+            @trigger-city-filter="handleCityFilter"
+          />
         </div>
 
         <!-- Helpful Tip Bar -->
@@ -587,8 +594,15 @@ import {
 } from "../../utils/helpers";
 import { DISTANCE } from "../../utils/constants";
 
+// Components
+import SelectTownFilter from "../shared/SelectTownFilter.vue";
+
 export default defineComponent({
   name: "FacilitiesNearMe",
+
+  components: {
+    SelectTownFilter,
+  },
 
   setup() {
     const accessToken = ref(MAPBOX_TOKEN);
@@ -614,6 +628,8 @@ export default defineComponent({
     const selectedOwnership = ref<string>("both");
     // Hospital Type
     const selectedHospitalType = ref<string>("");
+    // City/Town Filter
+    const selectedCity = ref<string>("All");
 
     const distance = ref<Distance[]>(DISTANCE);
     const hoveredFacilityId = ref<number | null>(null);
@@ -723,7 +739,13 @@ export default defineComponent({
           selectedHospitalType.value,
         );
 
-        return matchesDistance && matchesOwnership && matchesHospitalType;
+        // City / Town Filter
+        const facilityCity = facility.properties?.city || "";
+        const matchesSelectedCity =
+          selectedCity.value === "All" ||
+          facilityCity.toLowerCase() === selectedCity.value.toLowerCase();
+
+        return matchesDistance && matchesOwnership && matchesHospitalType && matchesSelectedCity;
       });
     });
 
@@ -764,6 +786,43 @@ export default defineComponent({
 
     const handleHospitalTypeFilter = (filter: string) => {
       selectedHospitalType.value = filter;
+    };
+
+    const handleCityFilter = async (filter: string) => {
+      selectedCity.value = filter;
+
+      await nextTick();
+
+      const facilities = displayedFacilities.value;
+
+      if (!facilities || facilities.length === 0) return;
+
+      if (!map.value) return;
+
+      // If there's only 1 facility, fly directly to it
+      if (facilities.length === 1) {
+        const targetFacility = facilities[0];
+        if (!targetFacility) return;
+        flyToFacility(targetFacility);
+        return;
+      }
+
+      // Calculate bounding box across all facilities in the selected town
+      const bounds = new mapboxgl.LngLatBounds();
+
+      facilities.forEach((facility) => {
+        const coordinates = facility.geometry?.coordinates;
+        if (coordinates && coordinates.length === 2) {
+          bounds.extend(coordinates);
+        }
+      });
+
+      // Smoothly fit map to contain all facilities in that town
+      map.value.fitBounds(bounds, {
+        padding: { top: 60, bottom: 60, left: 60, right: 60 },
+        maxZoom: 14,
+        duration: 1200,
+      });
     };
 
     // MAP INTERACTION
@@ -1052,6 +1111,7 @@ export default defineComponent({
     const resetFilters = () => {
       selectedOwnership.value = "both";
       selectedHospitalType.value = "";
+      selectedCity.value = "All";
     };
 
     const openAddFacilityDialog = () => {
@@ -1251,6 +1311,7 @@ export default defineComponent({
       handleRetry,
       resetFilters,
       getErrorMessage,
+      selectedCity,
       fetchFacilitiesError,
       selectedFilterRadius,
       selectedOwnership,
@@ -1261,6 +1322,7 @@ export default defineComponent({
       handleRadiusFilter,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
+      handleCityFilter,
       getFacilityImage,
       ctaInsertionIndex,
       openAddFacilityDialog,
@@ -1595,56 +1657,6 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-/* Filter Button Base Styles */
-.filter-btn {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--q-primary, #0d1441);
-  background-color: #f8fafc;
-  border: 1px solid rgba(13, 20, 65, 0.18);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f1f5f9;
-    border-color: rgba(13, 20, 65, 0.4);
-    transform: translateY(-1px);
-  }
-
-  /* Active / Selected State */
-  &.selected {
-    background-color: var(--q-primary, #0d1441);
-    color: #ffffff;
-    border-color: var(--q-primary, #0d1441);
-    // box-shadow: 0 4px 12px rgba(13, 20, 65, 0.25);
-    box-shadow: 0 4px 10px rgba(13, 20, 65, 0.2);
-
-    &:hover {
-      background-color: var(--q-primary, #0d1441);
-      color: #ffffff;
-      border-color: var(--q-primary, #0d1441);
-      opacity: 0.95;
-    }
-  }
-
-  // &:active {
-  //   transform: translateY(0);
-  //   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  // }
-
-  /* Muted / Zero Results State */
-  &.is-empty:not(.selected) {
-    opacity: 0.55;
-    background-color: #f1f5f9;
-    border-style: dashed;
-    // border-color: rgba(13, 20, 65, 0.15);
-
-    // &:hover {
-    //   opacity: 0.85;
-    //   border-style: dashed;
-    // }
-  }
 }
 
 /* Custom Tooltip Styling */
