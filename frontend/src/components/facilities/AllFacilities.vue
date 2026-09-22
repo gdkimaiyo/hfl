@@ -786,6 +786,8 @@ export default defineComponent({
 
     // MAP INTERACTION
     const showFacility = (facilityId: number) => {
+      if (!isMapVisible.value) return;
+
       if (isHandset()) {
         void router.push({ name: "home", hash: "#map-section" });
       }
@@ -812,6 +814,8 @@ export default defineComponent({
     // Triggered when a user hovers over a facility item in the list.
     // Displays the map popup and focuses the facility without drawing routes.
     const hoverFacility = (facilityId: number) => {
+      if (!isMapVisible.value) return;
+
       if (hoveredFacilityId.value === facilityId) return;
 
       hoveredFacilityId.value = facilityId;
