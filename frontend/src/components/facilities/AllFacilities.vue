@@ -1058,6 +1058,8 @@ export default defineComponent({
           map.value.resize();
         }
       }
+
+      if (!isMapVisible.value && isMapExpanded.value) isMapExpanded.value = false;
     };
 
     // HELPER FUNCTIONS
