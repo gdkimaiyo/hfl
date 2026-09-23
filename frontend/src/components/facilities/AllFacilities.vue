@@ -363,7 +363,7 @@
                   :id="'listing-' + facility.properties.id"
                   class="item"
                   :class="{ 'is-selected': selectedFacility === facility.properties.id }"
-                  @click="showFacility(facility.properties.id ?? 0)"
+                  @click="showFacility(facility)"
                 >
                   <div class="image-wrapper">
                     <q-img
@@ -435,24 +435,45 @@
                     </div>
 
                     <!-- Distance and Actions Footer -->
-                    <div class="row items-center justify-between text-primary text-bold pt-xs">
+                    <div class="card-footer row items-center justify-between q-pt-xs">
+                      <!-- Distance Badge -->
                       <div
                         v-if="facility.properties.distance !== undefined"
-                        class="flex items-center text-caption text-weight-bold"
+                        class="distance-indicator row items-center text-caption text-weight-bold q-mt-md"
                       >
-                        <q-icon name="directions_car" size="14px" class="q-mr-xs" />
-                        {{ facility.properties.distance }} km away
+                        <q-icon name="directions_car" size="14px" class="q-mr-xs text-primary" />
+                        <span>{{ facility.properties.distance }} km away</span>
                       </div>
-                      <div class="q-mb-md">
+                      <div v-else class="col-grow q-mt-sm"></div>
+
+                      <!-- Action Buttons -->
+                      <div class="row items-center gap-xs q-mt-sm">
+                        <!-- View Map Button (Visible only when list view is active) -->
                         <q-btn
-                          flat
+                          v-if="!isMapVisible"
+                          outline
                           rounded
                           no-caps
-                          class="facility-card-action-btn"
                           size="sm"
-                          @click.stop
+                          color="primary"
+                          class="facility-card-secondary-btn q-mr-sm"
+                          @click.stop.prevent="switchToMapAndHighlight(facility)"
                         >
-                          Services
+                          <q-icon name="add_location" size="14px" class="q-mr-xs" />
+                          <span>View On Map</span>
+                        </q-btn>
+
+                        <!-- Services / Details Button -->
+                        <q-btn
+                          unelevated
+                          rounded
+                          no-caps
+                          size="sm"
+                          color="primary"
+                          class="facility-card-primary-btn"
+                          @click.stop.prevent="navigateToFacilityDetails(facility)"
+                        >
+                          <span>Services</span>
                           <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
                         </q-btn>
                       </div>
@@ -785,12 +806,20 @@ export default defineComponent({
     };
 
     // MAP INTERACTION
-    const showFacility = (facilityId: number) => {
-      if (!isMapVisible.value) return;
-
-      if (isHandset()) {
-        void router.push({ name: "home", hash: "#map-section" });
+    // Handles main card click interactions depending on active layout mode.
+    const showFacility = (facility: FacilityFeature) => {
+      // If in list-only view, default card click navigates directly to facility details page
+      if (!isMapVisible.value) {
+        navigateToFacilityDetails(facility);
+        return;
       }
+
+      // Mobile viewport auto-scroll fallback
+      if (isHandset()) {
+        void router.push({ name: "facilities", hash: "#map-section" });
+      }
+
+      const facilityId = facility.properties.id ?? 0;
       selectedFacility.value = facilityId;
 
       const targetFacility = displayedFacilities.value.find(
@@ -811,10 +840,13 @@ export default defineComponent({
       }
     };
 
-    // Triggered when a user hovers over a facility item in the list.
-    // Displays the map popup and focuses the facility without drawing routes.
+    // Triggered on list item hover.
+    // Displays map marker popups only when map layout is visible.
+    //  Focuses the facility without drawing routes.
     const hoverFacility = (facilityId: number) => {
       if (!isMapVisible.value) return;
+
+      // REST OF CODE REMAINS THE SAME
 
       if (hoveredFacilityId.value === facilityId) return;
 
@@ -828,6 +860,35 @@ export default defineComponent({
         createPopUp(targetFacility, map);
         flyToFacility(targetFacility);
       }
+    };
+
+    // Switches layout to show Map View and centers camera on targeted facility.
+    const switchToMapAndHighlight = async (facility: FacilityFeature) => {
+      isMapVisible.value = true;
+      // Auto-scroll to map-section view
+      void router.push({ name: "facilities", hash: "#map-section" });
+
+      // Wait for Mapbox DOM container to become visible before calling resize
+      await nextTick();
+
+      if (map.value) {
+        map.value.resize();
+      }
+
+      const facilityId = facility.properties.id ?? 0;
+
+      hoverFacility(facilityId);
+    };
+
+    // Open individual facility details page
+    const navigateToFacilityDetails = (facility: FacilityFeature) => {
+      const facilityId = facility.properties.id;
+      if (!facilityId) return;
+
+      // void router.push({
+      //   name: "facility-details",
+      //   params: { id: facilityId },
+      // });
     };
 
     // MAPBOX INITIALIZATION
@@ -1174,6 +1235,8 @@ export default defineComponent({
       userLocation,
       showFacility,
       hoverFacility,
+      switchToMapAndHighlight,
+      navigateToFacilityDetails,
       handleRetry,
       resetFilters,
       getErrorMessage,
@@ -1372,17 +1435,38 @@ a:hover {
   }
 }
 
-.facility-card-action-btn {
-  font-size: 12px;
-  font-weight: 600;
-  color: #ffffff;
-  padding: 4px 14px;
-  background-color: var(--q-primary, #0d1441);
-  transition: all 0.2s ease;
+.card-footer {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 8px;
 
-  &:hover {
+  .facility-card-secondary-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    // border-color: rgba(13, 20, 65, 0.2);
     background-color: var(--q-primary, #0d1441);
-    opacity: 0.9;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--q-primary, #0d1441);
+      opacity: 0.9;
+      // background-color: rgba(13, 20, 65, 0.05);
+      // border-color: var(--q-primary);
+    }
+  }
+
+  .facility-card-primary-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(13, 20, 65, 0.08);
+      opacity: 0.9;
+    }
   }
 }
 
