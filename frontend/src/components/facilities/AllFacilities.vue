@@ -1,5 +1,5 @@
 <template>
-  <div id="facilities-near-me" ref="#facilities-near-me" class="main-page">
+  <div id="all-facilities" ref="#all-facilities" class="main-page">
     <!-- Initial Loading State ONLY (First mount / Map Bootstrap) -->
     <div
       v-if="(isLocating && !map) || (isLoading && !map)"
@@ -8,27 +8,46 @@
       class="skeleton-workspace"
     >
       <header class="top-header-section q-mb-md">
-        <div class="text-h4 text-bold text-primary page-header q-mb-xs">Facilities Near Me</div>
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">All Facilities</div>
 
-        <div class="filters q-py-sm row items-center gap-xs">
-          <q-skeleton
-            v-for="dist in distance"
-            :key="'skeleton-radius-' + dist.radius"
-            type="QBtn"
-            animation="wave"
-            class="skeleton-filter-pill"
-          />
-          <q-separator vertical class="q-mx-xs" />
-          <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+        <div class="filters q-py-sm row items-center gap-xs justify-between">
+          <div class="row">
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+            <q-separator vertical class="q-mx-xs gt-xs" />
+            <q-skeleton
+              type="QBtn"
+              animation="wave"
+              class="skeleton-filter-pill q-ml-sm"
+              width="70px"
+            />
+            <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
+          </div>
           <q-skeleton type="QBtn" animation="wave" class="skeleton-filter-pill" width="70px" />
         </div>
 
-        <q-skeleton type="text" width="40%" height="18px" animation="wave" class="q-mt-xs" />
+        <q-skeleton type="text" width="50%" height="18px" animation="wave" class="q-mt-xs" />
       </header>
 
       <q-separator class="q-mb-md" />
 
-      <main class="section">
+      <main class="section main-layout-container" :class="layoutClasses">
         <aside class="side-content">
           <div class="listings">
             <div v-for="dummy in 3" :key="'skeleton-card-' + dummy" class="item">
@@ -87,177 +106,152 @@
 
     <div v-else id="map-section" ref="#map-section">
       <header class="top-header-section q-mb-md">
-        <div class="text-h4 text-bold text-primary page-header q-mb-xs">Facilities Near Me</div>
+        <div class="text-h4 text-bold text-primary page-header q-mb-xs">All Facilities</div>
 
         <!-- Filters Bar -->
-        <div v-if="userLocation" class="filters q-py-sm">
-          <!-- Default / All Button -->
-          <!-- <q-btn
-            flat
-            rounded
-            no-caps
-            class="filter-btn"
-            :class="{ selected: selectedFilterRadius === 15 }"
-            label="All (15 km)"
-            @click="showAll"
-          >
-            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              <span
-                >{{ selectedFilterRadius === 15 ? "Showing" : "Show" }} facilities within 15
-                km</span
+        <div class="filters q-py-sm row items-center justify-between">
+          <template v-if="userLocation">
+            <div class="row items-center">
+              <!-- Ownership Filters -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ma-sm"
+                :class="{ selected: selectedOwnership === 'public' }"
+                label="Public"
+                @click="handleOwnershipFilter('public')"
               >
-            </q-tooltip>
-          </q-btn> -->
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleOwnershipFilter('both')"
+                  v-if="selectedOwnership === 'public'"
+                />
+              </q-btn>
 
-          <!-- Dynamic Radius Buttons -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ma-sm"
+                :class="{ selected: selectedOwnership === 'private' }"
+                label="Private"
+                @click="handleOwnershipFilter('private')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleOwnershipFilter('both')"
+                  v-if="selectedOwnership === 'private'"
+                />
+              </q-btn>
+
+              <q-separator vertical class="gt-xs" />
+
+              <!-- Facility Type Filters -->
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ma-sm"
+                :class="{ selected: selectedHospitalType === 'hospital' }"
+                label="Hospital"
+                @click="handleHospitalTypeFilter('hospital')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleHospitalTypeFilter('')"
+                  v-if="selectedHospitalType === 'hospital'"
+                />
+              </q-btn>
+
+              <q-btn
+                flat
+                rounded
+                no-caps
+                class="filter-btn q-ma-sm"
+                :class="{ selected: selectedHospitalType === 'health-centre' }"
+                label="Health Centre"
+                @click="handleHospitalTypeFilter('health-centre')"
+              >
+                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                  {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
+                </q-tooltip>
+                <q-icon
+                  name="close"
+                  size="14px"
+                  class="q-ml-xs"
+                  @click.stop="handleHospitalTypeFilter('')"
+                  v-if="selectedHospitalType === 'health-centre'"
+                />
+              </q-btn>
+
+              <q-separator vertical class="gt-xs" />
+
+              <!-- City/Town Filters -->
+              <SelectTownFilter
+                :selectedCity="selectedCity"
+                :isLocationActive="userLocation ? true : false"
+                @trigger-city-filter="handleCityFilter"
+              />
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="column">
+              <q-banner
+                v-if="!isLocating"
+                dense
+                inline-actions
+                class="text-amber-10 rounded-borders text-caption"
+              >
+                <template #avatar>
+                  <q-icon name="location_off" color="amber-9" size="xs" />
+                </template>
+                Location disabled — showing top facilities per town.
+              </q-banner>
+
+              <!-- City/Town Filters -->
+              <SelectTownFilter
+                :selectedCity="selectedCity"
+                @trigger-city-filter="handleCityFilter"
+              />
+            </div>
+          </template>
+
           <q-btn
-            flat
+            unelevated
             rounded
             no-caps
-            v-for="dist in distance"
-            :key="'filter-radius-' + dist.radius + 'km-' + dist.id"
-            class="filter-btn"
-            :class="{
-              selected: selectedFilterRadius === dist.radius,
-              'is-empty': getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15,
-            }"
-            :label="dist.radius + ' km'"
-            @click="handleRadiusFilter(dist.radius)"
+            color="primary"
+            class="filter-btn q-ml-sm"
+            @click="toggleListingsView"
           >
-            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              <span v-if="getFacilityCountForRadius(dist.radius) === 0 && dist.radius <= 15">
-                No facilities within {{ dist.radius }} km
-              </span>
-              <span v-else-if="selectedFilterRadius === dist.radius">
-                Showing facilities within {{ dist.radius }} km
-              </span>
-              <span v-else-if="dist.radius <= 15">
-                Show {{ getFacilityCountForRadius(dist.radius) }} facilities within
-                {{ dist.radius }} km
-              </span>
-              <div v-else class="column items-center">
-                <span>Expand search to {{ dist.radius }} km</span>
-                <span class="tooltip-badge q-mt-xs">
-                  <q-icon name="sync" size="10px" class="q-mr-xs" />Fetches wider area data
-                </span>
-              </div>
-            </q-tooltip>
-          </q-btn>
-
-          <q-separator vertical class="q-mx-xs" />
-
-          <!-- Ownership Filters -->
-          <q-btn
-            flat
-            rounded
-            no-caps
-            class="filter-btn"
-            :class="{ selected: selectedOwnership === 'public' }"
-            label="Public"
-            @click="handleOwnershipFilter('public')"
-          >
-            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
-            </q-tooltip>
             <q-icon
-              name="close"
+              :name="isMapVisible ? 'format_list_bulleted' : 'map'"
               size="14px"
-              class="q-ml-xs"
-              @click.stop="handleOwnershipFilter('both')"
-              v-if="selectedOwnership === 'public'"
+              class="q-mr-xs"
             />
-          </q-btn>
+            <span>{{ isMapVisible ? "List View" : "Map View" }}</span>
 
-          <q-btn
-            flat
-            rounded
-            no-caps
-            class="filter-btn"
-            :class="{ selected: selectedOwnership === 'private' }"
-            label="Private"
-            @click="handleOwnershipFilter('private')"
-          >
             <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
+              Switch to {{ isMapVisible ? "list" : "interactive map" }} view
             </q-tooltip>
-            <q-icon
-              name="close"
-              size="14px"
-              class="q-ml-xs"
-              @click.stop="handleOwnershipFilter('both')"
-              v-if="selectedOwnership === 'private'"
-            />
           </q-btn>
-
-          <q-separator vertical class="q-mx-xs" />
-
-          <!-- Facility Type Filters -->
-          <q-btn
-            flat
-            rounded
-            no-caps
-            class="filter-btn"
-            :class="{ selected: selectedHospitalType === 'hospital' }"
-            label="Hospital"
-            @click="handleHospitalTypeFilter('hospital')"
-          >
-            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
-            </q-tooltip>
-            <q-icon
-              name="close"
-              size="14px"
-              class="q-ml-xs"
-              @click.stop="handleHospitalTypeFilter('')"
-              v-if="selectedHospitalType === 'hospital'"
-            />
-          </q-btn>
-
-          <q-btn
-            flat
-            rounded
-            no-caps
-            class="filter-btn"
-            :class="{ selected: selectedHospitalType === 'health-centre' }"
-            label="Health Centre"
-            @click="handleHospitalTypeFilter('health-centre')"
-          >
-            <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-              {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
-            </q-tooltip>
-            <q-icon
-              name="close"
-              size="14px"
-              class="q-ml-xs"
-              @click.stop="handleHospitalTypeFilter('')"
-              v-if="selectedHospitalType === 'health-centre'"
-            />
-          </q-btn>
-
-          <!-- <q-badge v-if="userLocation" color="primary" class="q-pa-xs q-ma-md">
-            <q-icon name="gps_fixed" class="q-mr-xs" /> Sorting by proximity to your location
-          </q-badge> -->
-        </div>
-
-        <div v-else class="q-py-sm">
-          <q-banner
-            v-if="!isLocating"
-            dense
-            inline-actions
-            class="text-amber-10 rounded-borders text-caption"
-          >
-            <template #avatar>
-              <q-icon name="location_off" color="amber-9" size="xs" />
-            </template>
-            Location disabled — showing top facilities in Kenya.
-          </q-banner>
-
-          <!-- City/Town Filters -->
-          <SelectTownFilter
-            :selectedCity="selectedCity"
-            :isLocationActive="userLocation ? true : false"
-            @trigger-city-filter="handleCityFilter"
-          />
         </div>
 
         <!-- Helpful Tip Bar -->
@@ -270,7 +264,7 @@
       <!-- <q-separator spaced /> -->
       <q-separator class="q-mb-md" />
 
-      <main class="section main-layout-container" :class="{ 'is-map-expanded': isMapExpanded }">
+      <main class="section main-layout-container" :class="layoutClasses">
         <section v-show="!isMapExpanded" class="side-content">
           <!-- <div class="side-header">
             <h1>Facilities ({{ displayedFacilities.length }})</h1>
@@ -300,6 +294,64 @@
             />
           </div>
 
+          <!-- EMPTY STATE => No facilities after applying filter -->
+          <div
+            v-if="!fetchFacilitiesError && !isFetching && displayedFacilities.length === 0"
+            class="empty-state-container q-pa-lg text-center"
+          >
+            <div class="q-mb-xl">
+              <q-icon name="domain_disabled" size="56px" color="grey-5" class="q-mb-sm" />
+              <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">No facilities found</div>
+              <div class="text-caption text-grey-6 q-mb-md text-center style-max-width">
+                We couldn't find any facilities matching your current filter criteria. <br />
+                Try another filter or reset.
+              </div>
+              <q-btn
+                outline
+                rounded
+                no-caps
+                color="primary"
+                icon="tune"
+                label="Reset Filters"
+                @click="resetFilters()"
+              />
+            </div>
+
+            <q-separator spaced />
+
+            <!-- CTA Card Standalone -->
+            <div
+              class="item-cta standalone-cta flex flex-center column q-pa-lg text-center q-mt-xl"
+              @click.stop="openAddFacilityDialog()"
+            >
+              <div class="cta-icon-wrapper q-mb-sm">
+                <q-icon name="add_business" size="28px" color="primary" />
+              </div>
+
+              <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
+                Owner of a healthcare facility?
+              </div>
+
+              <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
+                <!-- If your health facility is located here but missing from our directory, submit
+                  your facility details and the facility will be added. -->
+                List your clinic, hospital or diagnostic center on our platform to help patients
+                find your services and get real-time directions.
+              </p>
+
+              <q-btn
+                unelevated
+                rounded
+                no-caps
+                color="primary"
+                icon="add"
+                label="Add Facility"
+                class="q-px-md"
+                @click.stop="openAddFacilityDialog()"
+              />
+            </div>
+          </div>
+
           <div
             id="listings"
             class="listings"
@@ -311,7 +363,7 @@
                   :id="'listing-' + facility.properties.id"
                   class="item"
                   :class="{ 'is-selected': selectedFacility === facility.properties.id }"
-                  @click="showFacility(facility.properties.id ?? 0)"
+                  @click="showFacility(facility)"
                 >
                   <div class="image-wrapper">
                     <q-img
@@ -333,7 +385,6 @@
                       class="title text-subtitle1 text-bold"
                       :class="{ active: selectedFacility === facility.properties.id }"
                       @mouseenter="hoverFacility(facility.properties.id ?? 0)"
-                      @mouseleave="clearFacilityHover"
                     >
                       {{ facility.properties.name }}
                     </div>
@@ -384,24 +435,45 @@
                     </div>
 
                     <!-- Distance and Actions Footer -->
-                    <div
-                      class="row items-center justify-between text-primary text-bold pt-xs"
-                      v-if="facility.properties.distance !== undefined"
-                    >
-                      <div class="flex items-center text-caption text-weight-bold">
-                        <q-icon name="directions_car" size="14px" class="q-mr-xs" />
-                        {{ facility.properties.distance }} km away
+                    <div class="card-footer row items-center justify-between q-pt-xs">
+                      <!-- Distance Badge -->
+                      <div
+                        v-if="facility.properties.distance !== undefined"
+                        class="distance-indicator row items-center text-caption text-weight-bold q-mt-md"
+                      >
+                        <q-icon name="directions_car" size="14px" class="q-mr-xs text-primary" />
+                        <span>{{ facility.properties.distance }} km away</span>
                       </div>
-                      <div class="q-mb-md">
+                      <div v-else class="col-grow q-mt-sm"></div>
+
+                      <!-- Action Buttons -->
+                      <div class="row items-center gap-xs q-mt-sm">
+                        <!-- View Map Button (Visible only when list view is active) -->
                         <q-btn
-                          flat
+                          v-if="!isMapVisible"
+                          outline
                           rounded
                           no-caps
-                          class="facility-card-action-btn"
                           size="sm"
-                          @click.stop
+                          color="primary"
+                          class="facility-card-secondary-btn q-mr-sm"
+                          @click.stop.prevent="switchToMapAndHighlight(facility)"
                         >
-                          Services
+                          <q-icon name="add_location" size="14px" class="q-mr-xs" />
+                          <span>View On Map</span>
+                        </q-btn>
+
+                        <!-- Services / Details Button -->
+                        <q-btn
+                          unelevated
+                          rounded
+                          no-caps
+                          size="sm"
+                          color="primary"
+                          class="facility-card-primary-btn"
+                          @click.stop.prevent="navigateToFacilityDetails(facility)"
+                        >
+                          <span>Services</span>
                           <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
                         </q-btn>
                       </div>
@@ -489,63 +561,6 @@
                 </div>
               </div>
             </template>
-
-            <!-- EMPTY STATE => No facilities after applying filter -->
-            <template
-              v-else-if="!fetchFacilitiesError && !isFetching && displayedFacilities.length === 0"
-            >
-              <div class="empty-state-container q-pa-xl text-center flex flex-center column">
-                <q-icon name="domain_disabled" size="56px" color="grey-5" class="q-mb-sm" />
-                <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
-                  No facilities found nearby
-                </div>
-                <div class="text-caption text-grey-6 q-mb-md style-max-width">
-                  We couldn't find any facilities matching your current filter criteria. Try another
-                  filter or reset.
-                </div>
-                <q-btn
-                  outline
-                  rounded
-                  no-caps
-                  color="primary"
-                  icon="tune"
-                  label="Reset Filters"
-                  @click="resetFilters()"
-                />
-              </div>
-
-              <!-- CTA Card Standalone -->
-              <div
-                class="item-cta standalone-cta shadow-1 flex flex-center column q-pa-lg text-center q-mt-md"
-                @click.stop="openAddFacilityDialog()"
-              >
-                <div class="cta-icon-wrapper q-mb-sm">
-                  <q-icon name="add_business" size="28px" color="primary" />
-                </div>
-
-                <div class="text-subtitle1 text-bold text-grey-9 q-mb-xs">
-                  Own a facility in this area?
-                </div>
-
-                <p class="text-caption text-grey-7 item-cta-desc q-mb-md">
-                  <!-- If your health center is located here but missing from our directory, submit your
-                facility details for verification. -->
-                  If your health facility is located here but missing from our directory, submit
-                  your facility details and the facility will be added.
-                </p>
-
-                <q-btn
-                  unelevated
-                  rounded
-                  no-caps
-                  color="primary"
-                  icon="add"
-                  label="Add Facility"
-                  class="q-px-md"
-                  @click.stop="openAddFacilityDialog()"
-                />
-              </div>
-            </template>
           </div>
         </section>
 
@@ -578,11 +593,10 @@ import { useQuery } from "@tanstack/vue-query";
 import { MAPBOX_TOKEN } from "../../secrets.config";
 
 // Services
-import { getFacilitiesNearMe } from "../../services/facility.service";
+import { getAllFacilities } from "../../services/facility.service";
 
 // Types
-import type { Distance, FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
-// import type { FacilityFeature, FacilityGeoJSON } from "src/types/facility.types";
+import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
 
 // Utils / Helpers / Constants
 import {
@@ -592,13 +606,12 @@ import {
   isHandset,
   MaximizeControl,
 } from "../../utils/helpers";
-import { DISTANCE } from "../../utils/constants";
 
 // Components
 import SelectTownFilter from "../shared/SelectTownFilter.vue";
 
 export default defineComponent({
-  name: "FacilitiesNearMe",
+  name: "AllFacilities",
 
   components: {
     SelectTownFilter,
@@ -614,15 +627,11 @@ export default defineComponent({
     const isLocating = ref<boolean>(true);
 
     const isMapExpanded = ref<boolean>(false);
+    const isMapVisible = ref<boolean>(false);
     let maxControlInstance: MaximizeControl | null = null;
 
     const router = useRouter();
     // const $q = useQuasar();
-
-    // API Distance Radius state (Defaults to 15km)
-    const apiQueryRadius = ref<number>(15);
-    // Active UI filter state (Defaults to 1km)
-    const selectedFilterRadius = ref<number>(1);
 
     // Public or Private
     const selectedOwnership = ref<string>("both");
@@ -631,7 +640,6 @@ export default defineComponent({
     // City/Town Filter
     const selectedCity = ref<string>("All");
 
-    const distance = ref<Distance[]>(DISTANCE);
     const hoveredFacilityId = ref<number | null>(null);
 
     // GET DEVICE LOCATION
@@ -659,7 +667,7 @@ export default defineComponent({
       });
     };
 
-    // VUE QUERY - Dependent on apiQueryRadius
+    // VUE QUERY
     const {
       data: rawFacilities,
       isLoading,
@@ -667,9 +675,9 @@ export default defineComponent({
       refetch,
       error: fetchFacilitiesError,
     } = useQuery<FacilityGeoJSON>({
-      queryKey: ["facilities-near-me", apiQueryRadius],
+      queryKey: ["all-facilities"],
       queryFn: async () => {
-        const response = await getFacilitiesNearMe(userLocation.value, apiQueryRadius.value);
+        const response = await getAllFacilities();
 
         // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
         const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
@@ -723,10 +731,6 @@ export default defineComponent({
       return allFeatures.filter((facility) => {
         const props = facility.properties;
 
-        // Distance Radius Filter
-        const matchesDistance =
-          props.distance === undefined || props.distance <= selectedFilterRadius.value;
-
         // Ownership Filter ('both', 'public' or 'private')
         const matchesOwnership =
           selectedOwnership.value === "both" ||
@@ -745,41 +749,17 @@ export default defineComponent({
           selectedCity.value === "All" ||
           facilityCity.toLowerCase() === selectedCity.value.toLowerCase();
 
-        return matchesDistance && matchesOwnership && matchesHospitalType && matchesSelectedCity;
+        return matchesOwnership && matchesHospitalType && matchesSelectedCity;
       });
     });
 
+    // Reactive Layout Classes
+    const layoutClasses = computed(() => ({
+      "is-map-expanded": isMapExpanded.value,
+      "is-list-view": !isMapVisible.value,
+    }));
+
     // FILTER HANDLERS
-    const showAll = () => {
-      selectedFilterRadius.value = 15;
-      if (apiQueryRadius.value < 15) {
-        apiQueryRadius.value = 15;
-        void refetch();
-      }
-    };
-
-    const handleRadiusFilter = async (radius: number) => {
-      if (getFacilityCountForRadius(radius) === 0) return;
-
-      selectedFilterRadius.value = radius;
-
-      // Fetch wider boundaries if requested radius exceeds current cache threshold
-      if (radius > apiQueryRadius.value) {
-        apiQueryRadius.value = radius;
-
-        try {
-          await refetch();
-        } catch (error) {
-          console.error("Failed to get facilities in the expanded boundary: ", error);
-          Notify.create({
-            type: "negative",
-            message: "Unable to load facilities in the expanded radius",
-            timeout: 5000,
-          });
-        }
-      }
-    };
-
     const handleOwnershipFilter = (filter: string) => {
       selectedOwnership.value = filter;
     };
@@ -826,10 +806,20 @@ export default defineComponent({
     };
 
     // MAP INTERACTION
-    const showFacility = (facilityId: number) => {
-      if (isHandset()) {
-        void router.push({ name: "home", hash: "#map-section" });
+    // Handles main card click interactions depending on active layout mode.
+    const showFacility = (facility: FacilityFeature) => {
+      // If in list-only view, default card click navigates directly to facility details page
+      if (!isMapVisible.value) {
+        navigateToFacilityDetails(facility);
+        return;
       }
+
+      // Mobile viewport auto-scroll fallback
+      if (isHandset()) {
+        void router.push({ name: "facilities", hash: "#map-section" });
+      }
+
+      const facilityId = facility.properties.id ?? 0;
       selectedFacility.value = facilityId;
 
       const targetFacility = displayedFacilities.value.find(
@@ -850,9 +840,14 @@ export default defineComponent({
       }
     };
 
-    // Triggered when a user hovers over a facility item in the list.
-    // Displays the map popup and focuses the facility without drawing routes.
+    // Triggered on list item hover.
+    // Displays map marker popups only when map layout is visible.
+    //  Focuses the facility without drawing routes.
     const hoverFacility = (facilityId: number) => {
+      if (!isMapVisible.value) return;
+
+      // REST OF CODE REMAINS THE SAME
+
       if (hoveredFacilityId.value === facilityId) return;
 
       hoveredFacilityId.value = facilityId;
@@ -867,27 +862,38 @@ export default defineComponent({
       }
     };
 
-    //  Clears hover state when mouse leaves the facility item.
-    const clearFacilityHover = () => {
-      hoveredFacilityId.value = null;
-      const mapContainer = document.getElementById("mapContainer");
-      if (mapContainer) {
-        const popUps = mapContainer.getElementsByClassName("mapboxgl-popup");
-        Array.from(popUps).forEach((popup) => popup.remove());
+    // Switches layout to show Map View and centers camera on targeted facility.
+    const switchToMapAndHighlight = async (facility: FacilityFeature) => {
+      isMapVisible.value = true;
+      // Auto-scroll to map-section view
+      void router.push({ name: "facilities", hash: "#map-section" });
+
+      // Wait for Mapbox DOM container to become visible before calling resize
+      await nextTick();
+
+      if (map.value) {
+        map.value.resize();
       }
+
+      const facilityId = facility.properties.id ?? 0;
+
+      hoverFacility(facilityId);
+    };
+
+    // Open individual facility details page
+    const navigateToFacilityDetails = (facility: FacilityFeature) => {
+      const facilityId = facility.properties.id;
+      if (!facilityId) return;
+
+      // void router.push({
+      //   name: "facility-details",
+      //   params: { id: facilityId },
+      // });
     };
 
     // MAPBOX INITIALIZATION
     const mapboxMap = (data: FacilityFeature[]) => {
       mapboxgl.accessToken = accessToken.value;
-
-      /* Assign a unique ID to each facility & sanitize distances */
-      // data.features.forEach((facility, i) => {
-      //   facility.properties.id = i;
-      //   if (facility.properties.distance) {
-      //     facility.properties.distance = Math.round(facility.properties.distance * 100) / 100;
-      //   }
-      // });
 
       if (map.value) return;
 
@@ -898,7 +904,7 @@ export default defineComponent({
         container: "mapContainer",
         style: "mapbox://styles/mapbox/streets-v11",
         center: initialCenter,
-        zoom: userLocation.value ? 13 : 12,
+        zoom: 12,
         scrollZoom: false,
       });
 
@@ -944,7 +950,7 @@ export default defineComponent({
           map.value.addControl(maxControlInstance, "top-left");
         }
 
-        if (userLocation.value) fitMapToVisibleFacilities(data);
+        // if (userLocation.value) fitMapToVisibleFacilities(data);
         addMarkers(data);
       });
     };
@@ -1027,80 +1033,41 @@ export default defineComponent({
       }
     };
 
-    // const onMapClick = (event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
-    //   if (!map.value) return;
-
-    //   const features = map.value.queryRenderedFeatures(event.point, {
-    //     layers: ["locations"],
-    //   });
-
-    //   if (!features.length) return;
-
-    //   const clickedPoint = features[0] as unknown as FacilityFeature;
-
-    //   flyToFacility(clickedPoint);
-    //   createPopUp(clickedPoint);
-    //   selectedFacility.value = clickedPoint.properties.id ?? null;
-    // };
-
-    const flyToFacility = (currentFeature: FacilityFeature) => {
+    const flyToFacility = (currentFeature: FacilityFeature, zoom?: number) => {
       map.value?.flyTo({
         center: currentFeature.geometry.coordinates,
-        zoom: 13,
+        zoom: zoom ? zoom : 13,
       });
     };
 
     // Fit map viewport around all currently rendered/displayed facilities
-    const fitMapToVisibleFacilities = (features: FacilityFeature[]) => {
-      if (!map.value || features.length === 0) return;
+    // const fitMapToVisibleFacilities = (features: FacilityFeature[]) => {
+    //   if (!map.value || features.length === 0) return;
 
-      const bounds = new mapboxgl.LngLatBounds();
+    //   const bounds = new mapboxgl.LngLatBounds();
 
-      // Always include user location in bounds calculation if present
-      if (userLocation.value) {
-        bounds.extend(userLocation.value);
-      }
+    //   // Always include user location in bounds calculation if present
+    //   if (userLocation.value) {
+    //     bounds.extend(userLocation.value);
+    //   }
 
-      // Extend bounds to encompass every visible facility marker
-      features.forEach((facility) => {
-        bounds.extend(facility.geometry.coordinates);
-      });
+    //   // Extend bounds to encompass every visible facility marker
+    //   features.forEach((facility) => {
+    //     bounds.extend(facility.geometry.coordinates);
+    //   });
 
-      map.value.fitBounds(bounds, {
-        padding: { top: 70, bottom: 70, left: 70, right: 70 },
-        maxZoom: 14, // Prevents over-zooming when only 1 facility exists close to user
-        duration: 1000, // Smooth 1-second transition animation
-      });
-    };
+    //   map.value.fitBounds(bounds, {
+    //     padding: { top: 70, bottom: 70, left: 70, right: 70 },
+    //     maxZoom: 14, // Prevents over-zooming when only 1 facility exists close to user
+    //     duration: 1000, // Smooth 1-second transition animation
+    //   });
+    // };
 
     const handleRetry = async () => {
       try {
-        let result = await refetch();
+        const result = await refetch();
 
-        const widerRadii = distance.value
-          .map((d) => d.radius)
-          .filter((r) => r > apiQueryRadius.value)
-          .sort((a, b) => a - b);
-
-        let i = 0;
-        while ((!result.data || result.data.features.length === 0) && i < widerRadii.length) {
-          apiQueryRadius.value = widerRadii[i] || 15;
-          result = await refetch();
-          i++;
-        }
         if (result.data && result.data.features.length > 0) {
-          const distances = result.data.features
-            .map((f) => f.properties.distance)
-            .filter((d): d is number => d !== undefined);
-
-          if (distances.length > 0) {
-            const minDistance = Math.min(...distances);
-            const effectiveFilter = distance.value.find((d) => d.radius >= minDistance);
-            if (effectiveFilter) {
-              selectedFilterRadius.value = effectiveFilter.radius;
-            }
-          }
-
           await initializeMap(displayedFacilities.value);
         }
       } catch (err) {
@@ -1145,27 +1112,22 @@ export default defineComponent({
       }
     };
 
-    // HELPER FUNCTIONS
-    const getFacilityCountForRadius = (radius: number): number => {
-      const allFeatures = rawFacilities.value?.features || [];
+    const toggleListingsView = async () => {
+      isMapVisible.value = !isMapVisible.value;
 
-      return allFeatures.filter((facility) => {
-        const props = facility.properties;
+      if (isMapVisible.value) {
+        await nextTick();
 
-        const matchesRadius = props.distance !== undefined && props.distance <= radius;
-        const matchesOwnership =
-          selectedOwnership.value === "both" ||
-          (selectedOwnership.value === "private" && props.isPrivate === true) ||
-          (selectedOwnership.value === "public" && props.isPrivate === false);
-        const matchesHospitalType = computedHospitalTypeMatch(
-          props.type,
-          selectedHospitalType.value,
-        );
+        // Force Mapbox WebGL viewport recalculation
+        if (map.value) {
+          map.value.resize();
+        }
+      }
 
-        return matchesRadius && matchesOwnership && matchesHospitalType;
-      }).length;
+      if (!isMapVisible.value && isMapExpanded.value) isMapExpanded.value = false;
     };
 
+    // HELPER FUNCTIONS
     const computedHospitalTypeMatch = (
       facilityType: string | undefined,
       selectedType: string,
@@ -1180,6 +1142,7 @@ export default defineComponent({
 
     const initializeMap = async (data: FacilityFeature[]) => {
       await nextTick();
+
       if (document.getElementById("mapContainer")) {
         // If map instance already exists, resize it; otherwise create it
         if (map.value) {
@@ -1202,21 +1165,10 @@ export default defineComponent({
     };
 
     // WATCHERS & LIFECYCLE
-    // Replaces mounted(). Wait until both Vue Query has the facilities data
-    // AND the DOM container element reference is populated before loading the map.
-    // watch(
-    //   [facilities, mapContainer],
-    //   ([newFacilities, container]) => {
-    //     if (newFacilities && newFacilities?.features?.length > 0 && container) {
-    //       mapboxMap(newFacilities);
-    //     }
-    //   },
-    //   { immediate: true },
-    // );
     watch(displayedFacilities, (newFeatures) => {
       if (map.value) {
         addMarkers(newFeatures);
-        if (userLocation.value) fitMapToVisibleFacilities(newFeatures);
+        // if (userLocation.value) fitMapToVisibleFacilities(newFeatures);
       }
     });
 
@@ -1252,40 +1204,16 @@ export default defineComponent({
       await locateUser();
 
       try {
-        let result = await refetch();
-
-        const widerRadii = distance.value
-          .map((d) => d.radius)
-          .filter((r) => r > apiQueryRadius.value)
-          .sort((a, b) => a - b);
-
-        let i = 0;
-        while ((!result.data || result.data.features.length === 0) && i < widerRadii.length) {
-          apiQueryRadius.value = widerRadii[i] || 15;
-          result = await refetch();
-          i++;
-        }
+        const result = await refetch();
 
         if (result.data && result.data.features.length > 0) {
-          const distances = result.data.features
-            .map((f) => f.properties.distance)
-            .filter((d): d is number => d !== undefined);
-
-          if (distances.length > 0) {
-            const minDistance = Math.min(...distances);
-            const effectiveFilter = distance.value.find((d) => d.radius >= minDistance);
-            if (effectiveFilter) {
-              selectedFilterRadius.value = effectiveFilter.radius;
-            }
-          }
-
           await initializeMap(displayedFacilities.value);
         }
       } catch (error) {
-        console.error("Failed mounting FacilitiesNearMe:", error);
+        console.error("Failed mounting AllFacilitie:", error);
         Notify.create({
           type: "negative",
-          message: "Unable to load facilities near me.",
+          message: "Unable to load all facilities.",
           group: false,
           timeout: 5000,
         });
@@ -1307,19 +1235,15 @@ export default defineComponent({
       userLocation,
       showFacility,
       hoverFacility,
-      clearFacilityHover,
+      switchToMapAndHighlight,
+      navigateToFacilityDetails,
       handleRetry,
       resetFilters,
       getErrorMessage,
-      selectedCity,
       fetchFacilitiesError,
-      selectedFilterRadius,
       selectedOwnership,
       selectedHospitalType,
-      distance,
-      showAll,
-      getFacilityCountForRadius,
-      handleRadiusFilter,
+      selectedCity,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
       handleCityFilter,
@@ -1327,6 +1251,9 @@ export default defineComponent({
       ctaInsertionIndex,
       openAddFacilityDialog,
       isMapExpanded,
+      isMapVisible,
+      layoutClasses,
+      toggleListingsView,
     };
   },
 });
@@ -1389,7 +1316,7 @@ export default defineComponent({
   flex-direction: row;
   gap: 20px;
   height: calc(100vh - 270px);
-  min-height: 500px;
+  min-height: 600px;
 }
 
 .side-content {
@@ -1456,6 +1383,7 @@ a:hover {
   flex: 1;
   overflow-y: auto;
   padding-right: 8px;
+  padding-top: 8px;
   // transition: opacity 0.25s ease;
   transition: opacity 0.2s ease-in-out;
 
@@ -1476,8 +1404,6 @@ a:hover {
   cursor: pointer;
 
   &:hover {
-    // border-color: var(--q-primary, #0d1441);
-    // box-shadow: 0 4px 16px rgba(13, 20, 65, 0.08);
     transform: translateY(-2px);
 
     .title {
@@ -1485,11 +1411,6 @@ a:hover {
       color: rgba(13, 20, 65, 0.7);
     }
   }
-
-  // &.is-selected {
-  //   border: 2px solid var(--q-primary, #0d1441);
-  //   box-shadow: 0 6px 20px rgba(13, 20, 65, 0.12);
-  // }
 }
 
 .facility-img {
@@ -1514,37 +1435,40 @@ a:hover {
   }
 }
 
-.facility-card-action-btn {
-  font-size: 12px;
-  font-weight: 600;
-  color: #ffffff;
-  padding: 4px 14px;
-  background-color: var(--q-primary, #0d1441);
-  transition: all 0.2s ease;
+.card-footer {
+  border-top: 1px solid #f1f5f9;
+  margin-top: 8px;
 
-  &:hover {
+  .facility-card-secondary-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    // border-color: rgba(13, 20, 65, 0.2);
     background-color: var(--q-primary, #0d1441);
-    opacity: 0.9;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--q-primary, #0d1441);
+      opacity: 0.9;
+      // background-color: rgba(13, 20, 65, 0.05);
+      // border-color: var(--q-primary);
+    }
+  }
+
+  .facility-card-primary-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(13, 20, 65, 0.08);
+      opacity: 0.9;
+    }
   }
 }
-
-// ::-webkit-scrollbar {
-//   width: 3px;
-//   height: 3px;
-//   border-left: 0;
-//   background: transparent;
-//   // background: rgba(0, 0, 0, 0.1);
-// }
-
-// ::-webkit-scrollbar-track {
-//   background: none;
-// }
-
-// ::-webkit-scrollbar-thumb {
-//   background: transparent;
-//   // background: #0d1441;
-//   border-radius: 0;
-// }
 
 /* Scrollbars */
 .listings::-webkit-scrollbar {
@@ -1608,6 +1532,7 @@ a:hover {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
+  display: block !important;
 
   .basemap {
     width: 100%;
@@ -1628,6 +1553,55 @@ a:hover {
   .map-locations,
   .basemap {
     min-height: 85vh;
+  }
+}
+
+/* ListView dimensions */
+.main-layout-container.is-list-view {
+  height: fit-content;
+  min-height: auto;
+  width: 100%;
+
+  .side-content {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .listings {
+    display: grid;
+    /* Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop, 4 on wide screens */
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+    width: 100%;
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr); // Default 3 across on desktop
+    }
+
+    // @media (min-width: 1440px) {
+    //   grid-template-columns: repeat(4, 1fr); // 4 across on extra-wide screens
+    // }
+
+    .item {
+      width: 100%;
+      height: 100%; /* Ensures cards stretch uniformly across rows */
+      margin: 0; /* Clear vertical margins used in single-column layout */
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+    }
+
+    // Hide CTA while on ListView
+    .item-cta {
+      display: none;
+    }
+  }
+
+  .map-locations {
+    display: none !important;
   }
 }
 
@@ -1659,28 +1633,6 @@ a:hover {
   gap: 8px;
 }
 
-/* Custom Tooltip Styling */
-.filter-tooltip {
-  background-color: rgba(13, 20, 65, 0.94) !important;
-  backdrop-filter: blur(4px);
-  color: #ffffff !important;
-  font-size: 12px !important;
-  padding: 6px 12px !important;
-  border-radius: 6px !important;
-
-  /* Refetch indicator pill inside tooltip */
-  .tooltip-badge {
-    display: inline-flex;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
-  }
-}
-
 .email {
   color: var(--q-primary, #0d1441);
   text-decoration: none;
@@ -1695,6 +1647,8 @@ a:hover {
   width: 68px;
   height: 34px;
   border-radius: 18px !important;
+  margin-top: 8px;
+  margin-right: 8px;
 }
 
 .skeleton-pill-btn {
@@ -1721,11 +1675,18 @@ a:hover {
   transform: translate(-50%, -6px);
 }
 
+.error-container {
+  min-height: 280px;
+  width: 100%;
+  line-height: 1.4;
+}
+
 .empty-state-container {
   min-height: 280px;
+  width: 100%;
 
   .style-max-width {
-    max-width: 280px;
+    max-width: 100%;
     line-height: 1.4;
   }
 }
