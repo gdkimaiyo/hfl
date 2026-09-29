@@ -878,6 +878,18 @@ export default defineComponent({
       const facilityId = facility.properties.id ?? 0;
 
       hoverFacility(facilityId);
+      scrollToListing(facilityId);
+    };
+
+    // Smoothly scrolls the side panel listings container to the target facility card.
+    const scrollToListing = (facilityId: number) => {
+      const listingEl = document.getElementById(`listing-${facilityId}`);
+      if (!listingEl) return;
+
+      listingEl.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     };
 
     // Open individual facility details page
