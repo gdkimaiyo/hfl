@@ -222,7 +222,11 @@
                 <template #avatar>
                   <q-icon name="location_off" color="amber-9" size="xs" />
                 </template>
-                Location disabled — showing top facilities per town.
+                Enable location access to calculate facility distances, sort by nearest and view
+                directions.
+
+                <!-- Facility distance calculations and route navigation require active
+                location access within Kenya. -->
               </q-banner>
 
               <!-- City/Town Filters -->
@@ -255,7 +259,10 @@
         </div>
 
         <!-- Helpful Tip Bar -->
-        <div v-if="isMapVisible" class="info text-caption text-grey-7 flex items-center q-mt-xs">
+        <div
+          v-if="isMapVisible && userLocation"
+          class="info text-caption text-grey-7 flex items-center q-mt-xs"
+        >
           <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
           Click on any facility card or map marker to draw a navigation route.
         </div>
@@ -590,6 +597,10 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useQuery } from "@tanstack/vue-query";
 
+// Turf
+import distance from "@turf/distance";
+import { point } from "@turf/helpers";
+
 import { MAPBOX_TOKEN } from "../../secrets.config";
 
 // Services
@@ -689,9 +700,6 @@ export default defineComponent({
           properties: {
             ...feature.properties,
             id: feature.properties?.id ?? index,
-            // distance: feature.properties.distance
-            //   ? Math.round(feature.properties.distance * 100) / 100
-            //   : 0,
           },
         }));
 
@@ -728,7 +736,7 @@ export default defineComponent({
     const displayedFacilities = computed<FacilityFeature[]>(() => {
       const allFeatures = rawFacilities.value?.features || [];
 
-      return allFeatures.filter((facility) => {
+      const filtered = allFeatures.filter((facility) => {
         const props = facility.properties;
 
         // Ownership Filter ('both', 'public' or 'private')
@@ -751,6 +759,32 @@ export default defineComponent({
 
         return matchesOwnership && matchesHospitalType && matchesSelectedCity;
       });
+
+      if (!userLocation.value) return filtered;
+
+      // Calculate distance from user for each filtered facility
+      const userPt = point(userLocation.value);
+
+      const withDistance = filtered.map((facility) => {
+        const facilityPt = point(facility.geometry.coordinates);
+        const distKm = distance(userPt, facilityPt, { units: "kilometers" });
+
+        return {
+          ...facility,
+          properties: {
+            ...facility.properties,
+            distance: Math.round(distKm * 100) / 100, // Round to 2 decimal places (e.g., 2.45 km)
+            // distance: Math.round(distKm * 10) / 10, // Round to 1 decimal place (e.g. 2.4 km)
+          },
+        };
+      });
+
+      // Sort closest to furthest
+      withDistance.sort(
+        (a, b) => (a.properties.distance ?? Infinity) - (b.properties.distance ?? Infinity),
+      );
+
+      return withDistance;
     });
 
     // Reactive Layout Classes
