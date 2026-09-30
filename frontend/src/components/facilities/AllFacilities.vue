@@ -617,6 +617,7 @@ import {
   isHandset,
   MaximizeControl,
 } from "../../utils/helpers";
+import { TOWNS } from "../../utils/constants";
 
 // Components
 import SelectTownFilter from "../shared/SelectTownFilter.vue";
@@ -650,6 +651,7 @@ export default defineComponent({
     const selectedHospitalType = ref<string>("");
     // City/Town Filter
     const selectedCity = ref<string>("All");
+    const ALL_TOWNS = TOWNS;
 
     const hoveredFacilityId = ref<number | null>(null);
 
@@ -809,9 +811,22 @@ export default defineComponent({
 
       const facilities = displayedFacilities.value;
 
-      if (!facilities || facilities.length === 0) return;
+      if (!facilities) return;
 
       if (!map.value) return;
+
+      if (facilities.length === 0) {
+        const selectedTown = ALL_TOWNS.find((town) => town.town === selectedCity.value);
+        const townCoords = selectedTown
+          ? selectedTown.coords
+          : [36.81868966807952, -1.2860949419582617];
+
+        map.value?.flyTo({
+          center: townCoords,
+          zoom: 12,
+        });
+        return;
+      }
 
       // If there's only 1 facility, fly directly to it
       if (facilities.length === 1) {

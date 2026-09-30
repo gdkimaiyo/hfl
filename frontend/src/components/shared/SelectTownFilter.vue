@@ -102,10 +102,10 @@ export default defineComponent({
 
     // COMPUTED
     const otherTownOptions = computed(() => {
-      const otherTowns = ALL_TOWNS.filter((town) => !MAJOR_CITIES.includes(town));
+      const otherTowns = ALL_TOWNS.filter((town) => !MAJOR_CITIES.includes(town.town));
       return [
         { label: "Other Towns...", value: "All" },
-        ...otherTowns.map((town) => ({ label: town, value: town })),
+        ...otherTowns.map((town) => ({ label: town.town, value: town.town })),
       ];
     });
 
