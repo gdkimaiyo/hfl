@@ -255,7 +255,7 @@
         </div>
 
         <!-- Helpful Tip Bar -->
-        <div class="info text-caption text-grey-7 flex items-center q-mt-xs">
+        <div v-if="isMapVisible" class="info text-caption text-grey-7 flex items-center q-mt-xs">
           <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
           Click on any facility card or map marker to draw a navigation route.
         </div>
@@ -365,7 +365,7 @@
                   :class="{ 'is-selected': selectedFacility === facility.properties.id }"
                   @click="showFacility(facility)"
                 >
-                  <div class="image-wrapper">
+                  <div class="image-wrapper" :id="'card-img-' + facility.properties.id">
                     <q-img
                       alt="Facility Image"
                       :src="getFacilityImage(facility.properties.image)"
@@ -864,9 +864,18 @@ export default defineComponent({
 
     // Switches layout to show Map View and centers camera on targeted facility.
     const switchToMapAndHighlight = async (facility: FacilityFeature) => {
+      const facilityId = facility.properties.id ?? 0;
+
+      if (isHandset()) {
+        void router.push({
+          name: "facility-details",
+          params: { id: facilityId },
+          hash: "#facility-details-map-section",
+        });
+        return;
+      }
+
       isMapVisible.value = true;
-      // Auto-scroll to map-section view
-      void router.push({ name: "facilities", hash: "#map-section" });
 
       // Wait for Mapbox DOM container to become visible before calling resize
       await nextTick();
@@ -875,20 +884,50 @@ export default defineComponent({
         map.value.resize();
       }
 
-      const facilityId = facility.properties.id ?? 0;
-
       hoverFacility(facilityId);
-      scrollToListing(facilityId);
+
+      // Wait two frames so the grid→flex reflow and map resize fully paint
+      // before we measure/scroll — nextTick alone only flushes Vue's patch,
+      // not the browser's subsequent layout pass.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToListing(facilityId);
+        });
+      });
+
+      // Auto-scroll to map-section view
+      void router.push({ name: "facilities", hash: "#map-section" });
     };
 
     // Smoothly scrolls the side panel listings container to the target facility card.
     const scrollToListing = (facilityId: number) => {
-      const listingEl = document.getElementById(`listing-${facilityId}`);
-      if (!listingEl) return;
+      // const listingEl = document.getElementById(`link-${facilityId}`);
+      // if (!listingEl) return;
 
-      listingEl.scrollIntoView({
+      // listingEl.scrollIntoView({
+      //   behavior: "smooth",
+      //   block: "nearest",
+      // });
+
+      const listingEl = document.getElementById(`card-img-${facilityId}`);
+      const sidebarContainer = document.querySelector(".listings");
+
+      if (!listingEl || !sidebarContainer) return;
+
+      // Calculate position of the element relative to the scroll container
+      const containerRect = sidebarContainer.getBoundingClientRect();
+      const elementRect = listingEl.getBoundingClientRect();
+
+      const targetScrollTop = sidebarContainer.scrollTop + (elementRect.top - containerRect.top);
+      // const targetScrollTop =
+      //   sidebarContainer.scrollTop +
+      //   (elementRect.top - containerRect.top) -
+      //   containerRect.height / 2 +
+      //   elementRect.height / 2;
+
+      sidebarContainer.scrollTo({
+        top: targetScrollTop,
         behavior: "smooth",
-        block: "nearest",
       });
     };
 

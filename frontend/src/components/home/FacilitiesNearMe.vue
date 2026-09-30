@@ -503,15 +503,28 @@
                   We couldn't find any facilities matching your current filter criteria. Try another
                   filter or reset.
                 </div>
-                <q-btn
-                  outline
-                  rounded
-                  no-caps
-                  color="primary"
-                  icon="tune"
-                  label="Reset Filters"
-                  @click="resetFilters()"
-                />
+                <div class="row">
+                  <q-btn
+                    outline
+                    rounded
+                    no-caps
+                    color="primary"
+                    icon="tune"
+                    label="Reset Filters"
+                    @click="resetFilters()"
+                  />
+                  <q-btn
+                    unelevated
+                    rounded
+                    no-caps
+                    color="primary"
+                    class="q-ml-md"
+                    @click="scrollTo('all-facilities')"
+                  >
+                    <span>All Facilities</span>
+                    <q-icon name="open_in_new" size="14px" class="q-ml-xs" />
+                  </q-btn>
+                </div>
               </div>
 
               <!-- CTA Card Standalone -->
@@ -1114,6 +1127,10 @@ export default defineComponent({
       selectedCity.value = "All";
     };
 
+    const scrollTo = (refName: string): void => {
+      void router.push({ name: "facilities", hash: `#${refName}` });
+    };
+
     const openAddFacilityDialog = () => {
       console.log("Open Add Facility Modal");
       // Open Add Facility Modal
@@ -1310,6 +1327,7 @@ export default defineComponent({
       clearFacilityHover,
       handleRetry,
       resetFilters,
+      scrollTo,
       getErrorMessage,
       selectedCity,
       fetchFacilitiesError,
