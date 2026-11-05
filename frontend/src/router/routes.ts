@@ -12,6 +12,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/Facilities.vue"),
       },
       {
+        path: "/facility-details/:id",
+        name: "facility-details",
+        component: () => import("pages/AboutUs.vue"), // TODO : Update component
+        props: true,
+      },
+      {
         path: "/about-us",
         name: "about",
         component: () => import("pages/AboutUs.vue"),

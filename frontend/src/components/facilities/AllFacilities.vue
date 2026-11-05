@@ -2,7 +2,7 @@
   <div id="all-facilities" ref="#all-facilities" class="main-page">
     <!-- Initial Loading State ONLY (First mount / Map Bootstrap) -->
     <div
-      v-if="(isLocating && !map) || (isLoading && !map)"
+      v-if="(isLocating && !map) || (isLoading && !map) || (isLoadingIpLocation && !map)"
       id="map-section"
       ref="mapSection"
       class="skeleton-workspace"
@@ -110,132 +110,137 @@
 
         <!-- Filters Bar -->
         <div class="filters q-py-sm row items-center justify-between">
-          <template v-if="userLocation">
-            <div class="row items-center">
-              <!-- Ownership Filters -->
-              <q-btn
-                flat
-                rounded
-                no-caps
-                class="filter-btn q-ma-sm"
-                :class="{ selected: selectedOwnership === 'public' }"
-                label="Public"
-                @click="handleOwnershipFilter('public')"
-              >
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
-                </q-tooltip>
-                <q-icon
-                  name="close"
-                  size="14px"
-                  class="q-ml-xs"
-                  @click.stop="handleOwnershipFilter('both')"
-                  v-if="selectedOwnership === 'public'"
-                />
-              </q-btn>
-
-              <q-btn
-                flat
-                rounded
-                no-caps
-                class="filter-btn q-ma-sm"
-                :class="{ selected: selectedOwnership === 'private' }"
-                label="Private"
-                @click="handleOwnershipFilter('private')"
-              >
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
-                </q-tooltip>
-                <q-icon
-                  name="close"
-                  size="14px"
-                  class="q-ml-xs"
-                  @click.stop="handleOwnershipFilter('both')"
-                  v-if="selectedOwnership === 'private'"
-                />
-              </q-btn>
-
-              <q-separator vertical class="gt-xs" />
-
-              <!-- Facility Type Filters -->
-              <q-btn
-                flat
-                rounded
-                no-caps
-                class="filter-btn q-ma-sm"
-                :class="{ selected: selectedHospitalType === 'hospital' }"
-                label="Hospital"
-                @click="handleHospitalTypeFilter('hospital')"
-              >
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
-                </q-tooltip>
-                <q-icon
-                  name="close"
-                  size="14px"
-                  class="q-ml-xs"
-                  @click.stop="handleHospitalTypeFilter('')"
-                  v-if="selectedHospitalType === 'hospital'"
-                />
-              </q-btn>
-
-              <q-btn
-                flat
-                rounded
-                no-caps
-                class="filter-btn q-ma-sm"
-                :class="{ selected: selectedHospitalType === 'health-centre' }"
-                label="Health Centre"
-                @click="handleHospitalTypeFilter('health-centre')"
-              >
-                <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                  {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
-                </q-tooltip>
-                <q-icon
-                  name="close"
-                  size="14px"
-                  class="q-ml-xs"
-                  @click.stop="handleHospitalTypeFilter('')"
-                  v-if="selectedHospitalType === 'health-centre'"
-                />
-              </q-btn>
-
-              <q-separator vertical class="gt-xs" />
-
-              <!-- City/Town Filters -->
-              <SelectTownFilter
-                :selectedCity="selectedCity"
-                :isLocationActive="userLocation ? true : false"
-                @trigger-city-filter="handleCityFilter"
-              />
-            </div>
+          <template v-if="userIpLocation?.countryCode !== 'KE'">
+            <q-banner
+              v-if="!isLocating"
+              dense
+              inline-actions
+              class="text-amber-10 rounded-borders text-caption"
+            >
+              <template #avatar>
+                <q-icon name="location_off" color="amber-9" size="xs" />
+              </template>
+              Facility distance calculations and route navigation require active location access
+              within Kenya.
+            </q-banner>
           </template>
 
           <template v-else>
-            <div class="column">
-              <q-banner
-                v-if="!isLocating"
-                dense
-                inline-actions
-                class="text-amber-10 rounded-borders text-caption"
-              >
-                <template #avatar>
-                  <q-icon name="location_off" color="amber-9" size="xs" />
-                </template>
-                Enable location access to calculate facility distances, sort by nearest and view
-                directions.
+            <q-banner
+              v-if="!isLocating && !userLocation"
+              dense
+              inline-actions
+              class="text-amber-10 rounded-borders text-caption"
+            >
+              <template #avatar>
+                <q-icon name="location_off" color="amber-9" size="xs" />
+              </template>
+              Enable location access to calculate facility distances, sort by nearest and view
+              directions.
 
-                <!-- Facility distance calculations and route navigation require active
-                location access within Kenya. -->
-              </q-banner>
-
-              <!-- City/Town Filters -->
-              <SelectTownFilter
-                :selectedCity="selectedCity"
-                @trigger-city-filter="handleCityFilter"
-              />
-            </div>
+              <!-- Facility distance calculations and route navigation require active
+              location access within Kenya. -->
+            </q-banner>
           </template>
+
+          <div class="row items-center">
+            <!-- Ownership Filters -->
+            <q-btn
+              flat
+              rounded
+              no-caps
+              class="filter-btn q-ma-sm"
+              :class="{ selected: selectedOwnership === 'public' }"
+              label="Public"
+              @click="handleOwnershipFilter('public')"
+            >
+              <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                {{ selectedOwnership === "public" ? "Showing" : "Show" }} public facilities
+              </q-tooltip>
+              <q-icon
+                name="close"
+                size="14px"
+                class="q-ml-xs"
+                @click.stop="handleOwnershipFilter('both')"
+                v-if="selectedOwnership === 'public'"
+              />
+            </q-btn>
+
+            <q-btn
+              flat
+              rounded
+              no-caps
+              class="filter-btn q-ma-sm"
+              :class="{ selected: selectedOwnership === 'private' }"
+              label="Private"
+              @click="handleOwnershipFilter('private')"
+            >
+              <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                {{ selectedOwnership === "private" ? "Showing" : "Show" }} private facilities
+              </q-tooltip>
+              <q-icon
+                name="close"
+                size="14px"
+                class="q-ml-xs"
+                @click.stop="handleOwnershipFilter('both')"
+                v-if="selectedOwnership === 'private'"
+              />
+            </q-btn>
+
+            <q-separator vertical class="gt-xs" />
+
+            <!-- Facility Type Filters -->
+            <q-btn
+              flat
+              rounded
+              no-caps
+              class="filter-btn q-ma-sm"
+              :class="{ selected: selectedHospitalType === 'hospital' }"
+              label="Hospital"
+              @click="handleHospitalTypeFilter('hospital')"
+            >
+              <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                {{ selectedHospitalType === "hospital" ? "Showing" : "Show" }} hospitals
+              </q-tooltip>
+              <q-icon
+                name="close"
+                size="14px"
+                class="q-ml-xs"
+                @click.stop="handleHospitalTypeFilter('')"
+                v-if="selectedHospitalType === 'hospital'"
+              />
+            </q-btn>
+
+            <q-btn
+              flat
+              rounded
+              no-caps
+              class="filter-btn q-ma-sm"
+              :class="{ selected: selectedHospitalType === 'health-centre' }"
+              label="Health Centre"
+              @click="handleHospitalTypeFilter('health-centre')"
+            >
+              <q-tooltip class="filter-tooltip" :offset="[0, 8]">
+                {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
+              </q-tooltip>
+              <q-icon
+                name="close"
+                size="14px"
+                class="q-ml-xs"
+                @click.stop="handleHospitalTypeFilter('')"
+                v-if="selectedHospitalType === 'health-centre'"
+              />
+            </q-btn>
+
+            <q-separator vertical class="gt-xs" />
+
+            <!-- City/Town Filters -->
+            <SelectTownFilter
+              :selectedCity="selectedCity"
+              :isLocationActive="userLocation ? true : false"
+              @trigger-city-filter="handleCityFilter"
+            />
+          </div>
 
           <q-btn
             unelevated
@@ -260,7 +265,7 @@
 
         <!-- Helpful Tip Bar -->
         <div
-          v-if="isMapVisible && userLocation"
+          v-if="userIpLocation?.countryCode === 'KE' && isMapVisible && userLocation"
           class="info text-caption text-grey-7 flex items-center q-mt-xs"
         >
           <q-icon name="info" size="16px" class="q-mr-xs text-primary" />
@@ -445,7 +450,10 @@
                     <div class="card-footer row items-center justify-between q-pt-xs">
                       <!-- Distance Badge -->
                       <div
-                        v-if="facility.properties.distance !== undefined"
+                        v-if="
+                          userIpLocation?.countryCode === 'KE' &&
+                          facility.properties.distance !== undefined
+                        "
                         class="distance-indicator row items-center text-caption text-weight-bold q-mt-md"
                       >
                         <q-icon name="directions_car" size="14px" class="q-mr-xs text-primary" />
@@ -605,6 +613,7 @@ import { MAPBOX_TOKEN } from "../../secrets.config";
 
 // Services
 import { getAllFacilities } from "../../services/facility.service";
+import { fetchUserLocationByIP, getCachedLocation } from "../../services/location.service";
 
 // Types
 import type { FacilityFeature, FacilityGeoJSON } from "../../types/facility.types";
@@ -666,6 +675,7 @@ export default defineComponent({
         isLocating.value = true;
         navigator.geolocation.getCurrentPosition(
           (pos) => {
+            // TODO : Fallback to locating by userIpLocation lat, long
             userLocation.value = [pos.coords.longitude, pos.coords.latitude];
             isLocating.value = false;
             resolve();
@@ -716,6 +726,27 @@ export default defineComponent({
       placeholderData: { type: "FeatureCollection", features: [] },
     });
 
+    // Get user location using user ip address
+    const {
+      data: userIpLocation,
+      isLoading: isLoadingIpLocation,
+      // isError: ipLocationError,
+      // refetch: fetchIpLocation,
+    } = useQuery({
+      queryKey: ["ip-location"],
+      queryFn: fetchUserLocationByIP,
+
+      // Initialize query data instantly from localStorage if present
+      initialData: getCachedLocation() ?? undefined,
+
+      staleTime: 7 * 24 * 60 * 60 * 1000, // Keep fresh for 7 days
+      gcTime: 14 * 24 * 60 * 60 * 1000, // Keep in memory cache for 14 days
+
+      enabled: !getCachedLocation(),
+      refetchOnWindowFocus: false,
+      retry: 1, // Only retry once before giving up gracefully
+    });
+
     // COMPUTED
     // LOADING STATE
     const isInLoadingState = computed(
@@ -762,7 +793,7 @@ export default defineComponent({
         return matchesOwnership && matchesHospitalType && matchesSelectedCity;
       });
 
-      if (!userLocation.value) return filtered;
+      if (!userLocation.value || userIpLocation.value?.countryCode !== "KE") return filtered;
 
       // Calculate distance from user for each filtered facility
       const userPt = point(userLocation.value);
@@ -811,9 +842,7 @@ export default defineComponent({
 
       const facilities = displayedFacilities.value;
 
-      if (!facilities) return;
-
-      if (!map.value) return;
+      if (!facilities || !map.value) return;
 
       if (facilities.length === 0) {
         const selectedTown = ALL_TOWNS.find((town) => town.town === selectedCity.value);
@@ -880,8 +909,10 @@ export default defineComponent({
       flyToFacility(targetFacility);
       createPopUp(targetFacility, map);
 
-      if (userLocation.value) {
+      if (userIpLocation.value?.countryCode === "KE" && userLocation.value) {
+        // Primary Method - Muted now
         // void drawRoute(facility.geometry.coordinates);
+
         // Alternative
         drawRoute(targetFacility.geometry.coordinates).catch((err) => {
           console.error("Failed to fetch route:", err);
@@ -918,7 +949,7 @@ export default defineComponent({
       if (isHandset()) {
         void router.push({
           name: "facility-details",
-          params: { id: facilityId },
+          params: { id: String(facilityId) },
           hash: "#facility-details-map-section",
         });
         return;
@@ -985,10 +1016,10 @@ export default defineComponent({
       const facilityId = facility.properties.id;
       if (!facilityId) return;
 
-      // void router.push({
-      //   name: "facility-details",
-      //   params: { id: facilityId },
-      // });
+      void router.push({
+        name: "facility-details",
+        params: { id: String(facilityId) },
+      });
     };
 
     // MAPBOX INITIALIZATION
@@ -1080,7 +1111,8 @@ export default defineComponent({
           flyToFacility(marker);
           selectedFacility.value = marker.properties.id ?? null;
 
-          if (userLocation.value) {
+          if (userIpLocation.value?.countryCode === "KE" && userLocation.value) {
+            // Primary Method - Muted now
             // void drawRoute(marker.geometry.coordinates);
 
             // Alternative
@@ -1332,7 +1364,9 @@ export default defineComponent({
       isLoading,
       isFetching,
       isLocating,
+      isLoadingIpLocation,
       userLocation,
+      userIpLocation,
       showFacility,
       hoverFacility,
       switchToMapAndHighlight,
