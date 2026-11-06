@@ -262,6 +262,27 @@
             </q-tooltip>
           </q-btn>
         </div>
+        <!-- Search Bar -->
+        <div class="filters q-pa-sm row items-center">
+          <q-input
+            class="col-12 col-md-8"
+            standout="bg-primary text-white"
+            v-model="searchText"
+            dense
+            rounded
+            label="Search facilities by name, owner, town, address, postal code, county, e.t.c"
+            @clear="handleClearSearch()"
+          >
+            <template v-slot:append>
+              <q-icon
+                v-if="searchText"
+                name="close"
+                class="cursor-pointer"
+                @click="handleClearSearch()"
+              />
+            </template>
+          </q-input>
+        </div>
 
         <!-- Helpful Tip Bar -->
         <div
@@ -664,6 +685,9 @@ export default defineComponent({
 
     const hoveredFacilityId = ref<number | null>(null);
 
+    // Search Text
+    const searchText = ref<string>("");
+
     // GET DEVICE LOCATION
     const locateUser = () => {
       return new Promise<void>((resolve) => {
@@ -769,6 +793,9 @@ export default defineComponent({
     const displayedFacilities = computed<FacilityFeature[]>(() => {
       const allFeatures = rawFacilities.value?.features || [];
 
+      // Normalize search query for case-insensitive matching
+      const query = searchText.value.trim().toLowerCase();
+
       const filtered = allFeatures.filter((facility) => {
         const props = facility.properties;
 
@@ -790,7 +817,30 @@ export default defineComponent({
           selectedCity.value === "All" ||
           facilityCity.toLowerCase() === selectedCity.value.toLowerCase();
 
-        return matchesOwnership && matchesHospitalType && matchesSelectedCity;
+        // 4. Multi-Attribute Search Filter
+        let matchesSearch = true;
+        if (query) {
+          const name = (props.name || "").toLowerCase();
+          const address = (props.address || "").toLowerCase();
+          const city = (props.city || "").toLowerCase();
+          const state = (props.state || "").toLowerCase(); // County/State
+          const type = (props.type || "").toLowerCase();
+          const postalCode = (props.postalCode || "").toString().toLowerCase();
+
+          // Map boolean private status to searchable text strings
+          const ownershipText = props.isPrivate ? "private" : "public";
+
+          matchesSearch =
+            name.includes(query) ||
+            address.includes(query) ||
+            city.includes(query) ||
+            state.includes(query) ||
+            type.includes(query) ||
+            postalCode.includes(query) ||
+            ownershipText.includes(query);
+        }
+
+        return matchesOwnership && matchesHospitalType && matchesSelectedCity && matchesSearch;
       });
 
       if (!userLocation.value || userIpLocation.value?.countryCode !== "KE") return filtered;
@@ -881,6 +931,11 @@ export default defineComponent({
         maxZoom: 14,
         duration: 1200,
       });
+    };
+
+    // Clear search input handler
+    const handleClearSearch = () => {
+      searchText.value = "";
     };
 
     // MAP INTERACTION
@@ -1211,6 +1266,7 @@ export default defineComponent({
       selectedOwnership.value = "both";
       selectedHospitalType.value = "";
       selectedCity.value = "All";
+      searchText.value = "";
     };
 
     const openAddFacilityDialog = () => {
@@ -1369,6 +1425,7 @@ export default defineComponent({
       userIpLocation,
       showFacility,
       hoverFacility,
+      searchText,
       switchToMapAndHighlight,
       navigateToFacilityDetails,
       handleRetry,
@@ -1378,6 +1435,7 @@ export default defineComponent({
       selectedOwnership,
       selectedHospitalType,
       selectedCity,
+      handleClearSearch,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
       handleCityFilter,
