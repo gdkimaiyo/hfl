@@ -8,21 +8,79 @@ import ResponseHelper from "../../helpers/response.helper";
  */
 class FacilityController {
   /**
-   * Get all facilities
+   * Get all facilities with pagination support
    * @param {Object} req - The HTTP request object.
    * @param {Object} res - The HTTP response object.
-   * @returns {Object} JSON response with the facilities data or error.
+   * @returns {Object} JSON response with paginated facilities metadata and data.
    */
   static async getFacilities(req, res) {
     try {
-      const facilities = await facilityService.getAll();
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 20;
+      const search = (req.query.search || "").trim().toLowerCase();
+      const ownership = req.query.ownership || "both";
+      const city = req.query.city || "All";
+      const type = req.query.type || "";
+      const skip = (page - 1) * limit;
 
-      if (facilities) {
-        const facilitiesOrder = orderBy(facilities, ["created"], ["desc"]);
-        return ResponseHelper.sendResponse(res, 200, "facilities fetched successfully", facilitiesOrder);
+      const allFacilities = await facilityService.getAll();
+      const grandTotal = allFacilities ? allFacilities.length : 0;
+
+      let filteredFacilities = allFacilities;
+
+      if (filteredFacilities) {
+        filteredFacilities = filteredFacilities.filter((f) => {
+          const props = f.properties || {};
+
+          const matchesOwnership =
+            ownership === "both" ||
+            (ownership === "private" && props.isPrivate === true) ||
+            (ownership === "public" && props.isPrivate === false);
+
+          const matchesType = !type || (props.type || "").toLowerCase() === type.toLowerCase();
+          const matchesCity = city === "All" || (props.city || "").toLowerCase() === city.toLowerCase();
+
+          let matchesSearch = true;
+          if (search) {
+            const name = (props.name || "").toLowerCase();
+            const address = (props.address || "").toLowerCase();
+            const fCity = (props.city || "").toLowerCase();
+            const state = (props.state || "").toLowerCase();
+            const fType = (props.type || "").toLowerCase();
+            const postal = (props.postalCode || "").toString().toLowerCase();
+            const ownText = props.isPrivate ? "private" : "public";
+
+            matchesSearch =
+              name.includes(search) ||
+              address.includes(search) ||
+              fCity.includes(search) ||
+              state.includes(search) ||
+              fType.includes(search) ||
+              postal.includes(search) ||
+              ownText.includes(search);
+          }
+
+          return matchesOwnership && matchesType && matchesCity && matchesSearch;
+        });
+
+        const facilitiesOrder = orderBy(filteredFacilities, ["created"], ["desc"]);
+        const totalItems = facilitiesOrder.length;
+        const paginatedItems = facilitiesOrder.slice(skip, skip + limit);
+
+        return ResponseHelper.sendResponse(res, 200, "facilities fetched successfully", {
+          data: paginatedItems,
+          pagination: {
+            currentPage: page,
+            perPage: limit,
+            totalItems, // Filtered count
+            grandTotal, // Absolute database total
+            totalPages: Math.ceil(totalItems / limit) || 1,
+          },
+        });
       }
     } catch (error) {
       console.log("Error", error);
+      return ResponseHelper.sendResponse(res, 500, "Internal server error", null);
     }
   }
 

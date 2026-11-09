@@ -2,9 +2,17 @@ import axios from "axios";
 import { BACKEND_API } from "../secrets.config";
 import type { Coordinates } from "../types/user.types";
 
-// Get all facilities
-export const getAllFacilities = async () => {
-  const response = await axios.get(`${BACKEND_API}/api/v1/facilities`);
+export const getAllFacilities = async (
+  page = 1,
+  limit = 20,
+  search = "",
+  ownership = "both",
+  city = "All",
+  type = "",
+) => {
+  const response = await axios.get(`${BACKEND_API}/api/v1/facilities`, {
+    params: { page, limit, search, ownership, city, type },
+  });
   return response.data;
 };
 
