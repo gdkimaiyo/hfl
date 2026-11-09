@@ -216,19 +216,19 @@
               rounded
               no-caps
               class="filter-btn q-ma-sm"
-              :class="{ selected: selectedHospitalType === 'health-centre' }"
+              :class="{ selected: selectedHospitalType === 'health centre' }"
               label="Health Centre"
-              @click="handleHospitalTypeFilter('health-centre')"
+              @click="handleHospitalTypeFilter('health centre')"
             >
               <q-tooltip class="filter-tooltip" :offset="[0, 8]">
-                {{ selectedHospitalType === "health-centre" ? "Showing" : "Show" }} health centres
+                {{ selectedHospitalType === "health centre" ? "Showing" : "Show" }} health centres
               </q-tooltip>
               <q-icon
                 name="close"
                 size="14px"
                 class="q-ml-xs"
                 @click.stop="handleHospitalTypeFilter('')"
-                v-if="selectedHospitalType === 'health-centre'"
+                v-if="selectedHospitalType === 'health centre'"
               />
             </q-btn>
 
@@ -262,26 +262,43 @@
             </q-tooltip>
           </q-btn>
         </div>
+
         <!-- Search Bar -->
         <div class="filters q-pa-sm row items-center">
           <q-input
             class="col-12 col-md-8"
             standout="bg-primary text-white"
-            v-model="searchText"
+            v-model="inputSearchText"
             dense
             rounded
             label="Search facilities by name, owner, town, address, postal code, county, e.t.c"
-            @clear="handleClearSearch()"
+            @clear="handleClearSearch"
           >
             <template v-slot:append>
+              <q-spinner v-if="isFetching" size="sm" color="white" class="q-mr-sm" />
+
               <q-icon
-                v-if="searchText"
+                v-if="inputSearchText"
                 name="close"
                 class="cursor-pointer"
-                @click="handleClearSearch()"
+                @click="handleClearSearch"
               />
             </template>
           </q-input>
+        </div>
+
+        <div class="filters q-px-sm q-pt-sm row items-center" v-if="totalFacilityCount > 0">
+          <!-- Record Range Counter Display -->
+          <div class="text-caption text-grey-7 q-mb-sm text-center">
+            Showing
+            <span class="text-weight-bold">{{ paginationStartIndex }}</span
+            >–<span class="text-weight-bold">{{ paginationEndIndex }}</span> of
+            <span class="text-weight-bold">{{ totalFacilityCount }}</span> entries
+            <span v-if="hasActiveFilters">
+              (filtered from <span class="text-weight-bold">{{ grandTotalCount }}</span> total
+              entries)
+            </span>
+          </div>
         </div>
 
         <!-- Helpful Tip Bar -->
@@ -598,6 +615,47 @@
               </div>
             </template>
           </div>
+
+          <!-- Pagination Footer -->
+          <div
+            class="q-pa-lg column flex flex-center"
+            v-if="paginationInfo && paginationInfo.totalPages > 1"
+          >
+            <div class="row items-center q-gutter-sm">
+              <q-btn
+                flat
+                dense
+                no-caps
+                color="primary"
+                label="Previous"
+                :disable="currentPage <= 1"
+                @click="handlePageChange(currentPage - 1)"
+              />
+
+              <!-- Main Pagination Numbers -->
+              <q-pagination
+                v-model="currentPage"
+                :max="paginationInfo.totalPages"
+                :max-pages="isHandset() ? 2 : 7"
+                boundary-numbers
+                color="primary"
+                active-design="unelevated"
+                active-color="primary"
+                active-text-color="white"
+                @update:model-value="handlePageChange"
+              />
+
+              <q-btn
+                flat
+                dense
+                no-caps
+                color="primary"
+                label="Next"
+                :disable="currentPage >= paginationInfo.totalPages"
+                @click="handlePageChange(currentPage + 1)"
+              />
+            </div>
+          </div>
         </section>
 
         <!-- RIGHT CONTENT: Sticky Map -->
@@ -620,7 +678,7 @@ import {
   nextTick,
   watch,
 } from "vue";
-import { Notify } from "quasar";
+import { debounce, Notify } from "quasar";
 import { useRouter } from "vue-router";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -661,6 +719,10 @@ export default defineComponent({
 
   setup() {
     const accessToken = ref(MAPBOX_TOKEN);
+
+    const currentPage = ref<number>(1);
+    const pageSize = ref<number>(21);
+
     const selectedFacility = ref<number | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const map = shallowRef<any>(null);
@@ -687,6 +749,7 @@ export default defineComponent({
 
     // Search Text
     const searchText = ref<string>("");
+    const inputSearchText = ref<string>("");
 
     // GET DEVICE LOCATION
     const locateUser = () => {
@@ -714,24 +777,43 @@ export default defineComponent({
       });
     };
 
-    // VUE QUERY
+    // VUE QUERY with Pagination
     const {
-      data: rawFacilities,
+      data: facilityQueryResult,
       isLoading,
       isFetching,
       refetch,
       error: fetchFacilitiesError,
     } = useQuery<FacilityGeoJSON>({
-      queryKey: ["all-facilities"],
-      queryFn: async () => {
-        const response = await getAllFacilities();
+      queryKey: [
+        "all-facilities",
+        currentPage,
+        searchText,
+        selectedOwnership,
+        selectedCity,
+        selectedHospitalType,
+      ],
+      queryFn: async (): Promise<FacilityGeoJSON> => {
+        const response = await getAllFacilities(
+          currentPage.value,
+          pageSize.value,
+          searchText.value,
+          selectedOwnership.value,
+          selectedCity.value,
+          selectedHospitalType.value,
+        );
 
-        // IF response.data is the raw array, map it into a GeoJSON FeatureCollection object
-        const rawArray = Array.isArray(response.data) ? response.data : response.data.features;
-        const features = rawArray || []; // Fallback to empty array if something goes wrong
+        const responseBody = response.data || response;
 
-        // Map property IDs
-        const featuresWithIds = features.map((feature: FacilityFeature, index: number) => ({
+        const rawArray = Array.isArray(responseBody) ? responseBody : responseBody.data || [];
+        const paginationMeta = responseBody.pagination || {
+          currentPage: currentPage.value,
+          perPage: pageSize.value,
+          totalItems: rawArray.length,
+          totalPages: 1,
+        };
+
+        const featuresWithIds = rawArray.map((feature: FacilityFeature, index: number) => ({
           ...feature,
           properties: {
             ...feature.properties,
@@ -742,12 +824,13 @@ export default defineComponent({
         return {
           type: "FeatureCollection",
           features: featuresWithIds,
+          pagination: paginationMeta,
         };
       },
-      staleTime: Infinity,
+      staleTime: 5 * 60 * 1000,
       gcTime: 30 * 60 * 1000,
       enabled: false,
-      placeholderData: { type: "FeatureCollection", features: [] },
+      placeholderData: (previousData) => previousData,
     });
 
     // Get user location using user ip address
@@ -789,66 +872,19 @@ export default defineComponent({
       return Math.floor(total * 0.4) - 1;
     });
 
-    // IN-MEMORY FILTERED LIST
+    const rawFacilities = computed(
+      () => facilityQueryResult.value || { type: "FeatureCollection", features: [] },
+    );
+    const paginationInfo = computed(() => facilityQueryResult.value?.pagination);
+
     const displayedFacilities = computed<FacilityFeature[]>(() => {
-      const allFeatures = rawFacilities.value?.features || [];
+      const features = rawFacilities.value?.features || [];
 
-      // Normalize search query for case-insensitive matching
-      const query = searchText.value.trim().toLowerCase();
+      if (!userLocation.value || userIpLocation.value?.countryCode !== "KE") return features;
 
-      const filtered = allFeatures.filter((facility) => {
-        const props = facility.properties;
-
-        // Ownership Filter ('both', 'public' or 'private')
-        const matchesOwnership =
-          selectedOwnership.value === "both" ||
-          (selectedOwnership.value === "private" && props.isPrivate === true) ||
-          (selectedOwnership.value === "public" && props.isPrivate === false);
-
-        // Facility Type Filter ('', 'hospital' or 'health-centre')
-        const matchesHospitalType = computedHospitalTypeMatch(
-          props.type,
-          selectedHospitalType.value,
-        );
-
-        // City / Town Filter
-        const facilityCity = facility.properties?.city || "";
-        const matchesSelectedCity =
-          selectedCity.value === "All" ||
-          facilityCity.toLowerCase() === selectedCity.value.toLowerCase();
-
-        // 4. Multi-Attribute Search Filter
-        let matchesSearch = true;
-        if (query) {
-          const name = (props.name || "").toLowerCase();
-          const address = (props.address || "").toLowerCase();
-          const city = (props.city || "").toLowerCase();
-          const state = (props.state || "").toLowerCase(); // County/State
-          const type = (props.type || "").toLowerCase();
-          const postalCode = (props.postalCode || "").toString().toLowerCase();
-
-          // Map boolean private status to searchable text strings
-          const ownershipText = props.isPrivate ? "private" : "public";
-
-          matchesSearch =
-            name.includes(query) ||
-            address.includes(query) ||
-            city.includes(query) ||
-            state.includes(query) ||
-            type.includes(query) ||
-            postalCode.includes(query) ||
-            ownershipText.includes(query);
-        }
-
-        return matchesOwnership && matchesHospitalType && matchesSelectedCity && matchesSearch;
-      });
-
-      if (!userLocation.value || userIpLocation.value?.countryCode !== "KE") return filtered;
-
-      // Calculate distance from user for each filtered facility
       const userPt = point(userLocation.value);
 
-      const withDistance = filtered.map((facility) => {
+      const withDistance = features.map((facility) => {
         const facilityPt = point(facility.geometry.coordinates);
         const distKm = distance(userPt, facilityPt, { units: "kilometers" });
 
@@ -862,12 +898,45 @@ export default defineComponent({
         };
       });
 
-      // Sort closest to furthest
+      // Sort closest to furthest for the current page
       withDistance.sort(
         (a, b) => (a.properties.distance ?? Infinity) - (b.properties.distance ?? Infinity),
       );
 
       return withDistance;
+    });
+
+    // Check if user has active search or filters applied
+    const hasActiveFilters = computed(() => {
+      return (
+        searchText.value.trim().length > 0 ||
+        selectedOwnership.value !== "both" ||
+        selectedCity.value !== "All" ||
+        selectedHospitalType.value !== ""
+      );
+    });
+
+    // Grand total count from metadata
+    const grandTotalCount = computed(() => {
+      return paginationInfo.value?.grandTotal || totalFacilityCount.value;
+    });
+
+    // Calculate starting record index for current page
+    const paginationStartIndex = computed(() => {
+      if (!paginationInfo.value || paginationInfo.value.totalItems === 0) return 0;
+      return (currentPage.value - 1) * pageSize.value + 1;
+    });
+
+    // Calculate ending record index for current page
+    const paginationEndIndex = computed(() => {
+      if (!paginationInfo.value) return 0;
+      const total = paginationInfo.value.totalItems;
+      const currentCalculated = currentPage.value * pageSize.value;
+      return currentCalculated > total ? total : currentCalculated;
+    });
+
+    const totalFacilityCount = computed(() => {
+      return paginationInfo.value?.totalItems || 0;
     });
 
     // Reactive Layout Classes
@@ -933,9 +1002,36 @@ export default defineComponent({
       });
     };
 
+    // Trigger search after 300ms of typing inactivity
+    const updateSearchQuery = debounce((val: string) => {
+      searchText.value = val;
+      currentPage.value = 1; // Reset to page 1 on a new search query
+      void refetch();
+    }, 300);
+
     // Clear search input handler
     const handleClearSearch = () => {
+      inputSearchText.value = "";
       searchText.value = "";
+      currentPage.value = 1;
+      void refetch();
+    };
+
+    const handlePageChange = async (newPage: number) => {
+      currentPage.value = newPage;
+
+      // Smoothly scroll back to the top of the facility listings
+      void router.push({ name: "facilities", hash: "#all-facilities" });
+
+      // Trigger Vue Query refetch for the new page
+      await refetch();
+    };
+
+    const handleSearchInputChange = async (newSearchText: string) => {
+      searchText.value = newSearchText;
+
+      // Trigger Vue Query refetch for the new page
+      await refetch();
     };
 
     // MAP INTERACTION
@@ -1266,7 +1362,7 @@ export default defineComponent({
       selectedOwnership.value = "both";
       selectedHospitalType.value = "";
       selectedCity.value = "All";
-      searchText.value = "";
+      inputSearchText.value = "";
     };
 
     const openAddFacilityDialog = () => {
@@ -1316,17 +1412,17 @@ export default defineComponent({
     };
 
     // HELPER FUNCTIONS
-    const computedHospitalTypeMatch = (
-      facilityType: string | undefined,
-      selectedType: string,
-    ): boolean => {
-      if (!selectedType) return true;
+    // const computedHospitalTypeMatch = (
+    //   facilityType: string | undefined,
+    //   selectedType: string,
+    // ): boolean => {
+    //   if (!selectedType) return true;
 
-      const normalizedFacilityType = (facilityType || "").toLowerCase().replace(/[\s-_]/g, "");
-      const normalizedSelectedType = selectedType.toLowerCase().replace(/[\s-_]/g, "");
+    //   const normalizedFacilityType = (facilityType || "").toLowerCase().replace(/[\s-_]/g, "");
+    //   const normalizedSelectedType = selectedType.toLowerCase().replace(/[\s-_]/g, "");
 
-      return normalizedFacilityType.includes(normalizedSelectedType);
-    };
+    //   return normalizedFacilityType.includes(normalizedSelectedType);
+    // };
 
     const initializeMap = async (data: FacilityFeature[]) => {
       await nextTick();
@@ -1358,6 +1454,19 @@ export default defineComponent({
         addMarkers(newFeatures);
         // if (userLocation.value) fitMapToVisibleFacilities(newFeatures);
       }
+    });
+
+    watch([selectedOwnership, selectedCity, selectedHospitalType], () => {
+      currentPage.value = 1;
+      void refetch();
+    });
+
+    watch(searchText, () => {
+      currentPage.value = 1;
+    });
+
+    watch(inputSearchText, (newVal) => {
+      updateSearchQuery(newVal);
     });
 
     watch(fetchFacilitiesError, (newError) => {
@@ -1426,6 +1535,7 @@ export default defineComponent({
       showFacility,
       hoverFacility,
       searchText,
+      inputSearchText,
       switchToMapAndHighlight,
       navigateToFacilityDetails,
       handleRetry,
@@ -1435,7 +1545,17 @@ export default defineComponent({
       selectedOwnership,
       selectedHospitalType,
       selectedCity,
+      currentPage,
+      paginationInfo,
+      isHandset,
       handleClearSearch,
+      handlePageChange,
+      handleSearchInputChange,
+      hasActiveFilters,
+      grandTotalCount,
+      paginationStartIndex,
+      paginationEndIndex,
+      totalFacilityCount,
       handleOwnershipFilter,
       handleHospitalTypeFilter,
       handleCityFilter,

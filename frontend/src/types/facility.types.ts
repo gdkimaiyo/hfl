@@ -30,10 +30,17 @@ export type Property = {
   image?: string;
 };
 
-export type FacilityGeoJSON = {
+export interface FacilityGeoJSON {
   type: "FeatureCollection";
   features: FacilityFeature[];
-};
+  pagination?: {
+    currentPage: number;
+    perPage: number;
+    totalItems: number;
+    grandTotal: number;
+    totalPages: number;
+  };
+}
 
 export type Distance = {
   id: string;
